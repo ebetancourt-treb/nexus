@@ -12,6 +12,7 @@ class RoleSeeder extends Seeder
     {
         // 1. Crear Roles
         $roleSuperAdmin = Role::create(['name' => 'Super Admin']);
+        $roleAdmin = Role::create(['name=>' => 'Admin']);
         $roleCompanyAdmin = Role::create(['name' => 'Company Admin']);
         
         // 2. Crear TU Usuario Super Admin
@@ -21,7 +22,6 @@ class RoleSeeder extends Seeder
             'password' => Hash::make('WbrE5%7p'), 
             'tenant_id' => null, 
         ]);
-
         $user->assignRole($roleSuperAdmin);
     }
 }
