@@ -31,7 +31,6 @@
             <div class="w-full sm:max-w-md mt-6 px-6 py-8 bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden sm:rounded-xl">
                 {{ $slot }}
             </div>
-            
             <div class="mt-8 text-xs text-zinc-600">
                 &copy; {{ date('Y') }} NexusCore System. Acceso seguro.
             </div>
