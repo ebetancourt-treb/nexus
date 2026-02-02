@@ -9,4 +9,21 @@ class Tenant extends Model
 {
     /** @use HasFactory<\Database\Factories\TenantFactory> */
     use HasFactory;
+
+    protected $fillable =[
+
+        'name',
+        'admin_name',
+        'admin_email',
+        'password',
+        'domain',
+        'is_active',
+
+
+    ];
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

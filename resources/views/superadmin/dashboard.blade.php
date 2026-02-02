@@ -20,7 +20,7 @@
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-zinc-600 group-hover:text-zinc-400 transition-colors text-xs"></i>
                         </div>
 
-                        <a href="{{ route('superadmin.companies.create') }}" 
+                        <a href="{{ route('superadmin.tenants.create') }}" 
                            class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-indigo-900/20 transition-all duration-200 border border-transparent hover:border-indigo-400">
                             <i class="fa-solid fa-plus mr-2"></i>
                             Nueva Empresa
@@ -102,7 +102,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-wider">Empresa</th>
                                     <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-wider">Administrador</th>
-                                    <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-wider">Plan / Dominio</th>
+                                    <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-wider">Plan</th>
                                     <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-center">Estado</th>
                                     <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-wider text-right">Acciones</th>
                                 </tr>
@@ -117,7 +117,6 @@
                                             </div>
                                             <div class="ml-4">
                                                 <div class="text-sm font-semibold text-zinc-200">{{ $tenant->name }}</div>
-                                                <div class="text-xs text-zinc-500 font-mono">ID: #{{ $tenant->id }}</div>
                                             </div>
                                         </div>
                                     </td>
@@ -140,7 +139,7 @@
 
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded bg-zinc-950 text-zinc-400 border border-zinc-800 font-mono">
-                                            {{ $tenant->domain ?? 'localhost' }}
+                                            {{ $tenant->domain ?? 'Plan Normal' }}
                                         </span>
                                     </td>
 
@@ -166,7 +165,7 @@
                                             </div>
                                             <h3 class="text-sm font-medium text-zinc-300">No hay empresas registradas</h3>
                                             <p class="text-sm text-zinc-500 mt-1">La base de datos está vacía.</p>
-                                            <a href="{{ route('superadmin.companies.create') }}" class="mt-4 text-indigo-400 hover:text-indigo-300 font-medium text-sm border-b border-indigo-400/30 hover:border-indigo-300 pb-0.5 transition-all">
+                                            <a href="{{ route('superadmin.tenants.create') }}" class="mt-4 text-indigo-400 hover:text-indigo-300 font-medium text-sm border-b border-indigo-400/30 hover:border-indigo-300 pb-0.5 transition-all">
                                                 Crear la primera empresa
                                             </a>
                                         </div>
