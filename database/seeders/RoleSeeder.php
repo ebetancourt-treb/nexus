@@ -10,12 +10,12 @@ class RoleSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Crear Roles
+        // Roles
         $roleSuperAdmin = Role::create(['name' => 'Super Admin']);
         $roleAdmin = Role::create(['name=>' => 'Admin']);
         $roleCompanyAdmin = Role::create(['name' => 'Company Admin']);
-        
-        // 2. Crear TU Usuario Super Admin
+    
+        //Usuario Super Admin Treblum
         $user = User::create([
             'name' => 'Administrador Treblum',
             'email' => 'admin@treblum.com', 
