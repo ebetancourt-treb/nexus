@@ -9,7 +9,7 @@ export default defineConfig({
         }),
     ],
     hmr: {
-            host: '192.168.1.88',   // ip 
+            host: '0.0.0.0',   // ip 
             port: 5173,
             protocol: 'ws'         // WebSocket para HMR
         },
