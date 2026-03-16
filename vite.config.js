@@ -14,7 +14,7 @@ export default defineConfig({
     ],
     build: {
         // Dile a Vite dónde guardar los assets compilados
-        outDir: 'public_html/public', 
+        outDir: 'public_html/public/build', 
         emptyOutDir: true,
     }
 });
