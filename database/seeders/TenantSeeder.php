@@ -6,7 +6,7 @@ use Spatie\Permission\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class RoleSeeder extends Seeder
+class TenantSeeder extends Seeder
 {
     public function run()
     {
