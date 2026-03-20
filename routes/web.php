@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SuperAdmin\AuditLogController;
+use App\Http\Controllers\SuperAdmin\SubscriptionManagementController;
+use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\TenantManagementController;
 use App\Http\Controllers\Tenant\CategoryController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\MovementController;
@@ -28,14 +32,29 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ── Rutas del SuperAdmin (Treblum) ──
-Route::middleware(['auth', 'role:Super Admin'])
+Route::middleware(['auth'])
     ->prefix('super-admin')
     ->name('superadmin.')
     ->group(function () {
 
-        Route::get('/dashboard', function () {
-            return view('superadmin.dashboard');
-        })->name('dashboard');
+        // Middleware manual: verificar que sea superadmin
+        Route::middleware([\App\Http\Middleware\EnsureSuperAdmin::class])->group(function () {
+
+            Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
+
+            // Tenants
+            Route::get('/tenants', [TenantManagementController::class, 'index'])->name('tenants.index');
+            Route::get('/tenants/{tenant}', [TenantManagementController::class, 'show'])->name('tenants.show');
+            Route::patch('/tenants/{tenant}/toggle', [TenantManagementController::class, 'toggleActive'])->name('tenants.toggle');
+
+            // Suscripciones
+            Route::get('/subscriptions', [SubscriptionManagementController::class, 'index'])->name('subscriptions.index');
+            Route::patch('/subscriptions/{subscription}/change-plan', [SubscriptionManagementController::class, 'changePlan'])->name('subscriptions.change-plan');
+            Route::patch('/subscriptions/{subscription}/extend-trial', [SubscriptionManagementController::class, 'extendTrial'])->name('subscriptions.extend-trial');
+
+            // Audit logs
+            Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        });
     });
 
 // ── Rutas del Tenant (empresa cliente) ──
