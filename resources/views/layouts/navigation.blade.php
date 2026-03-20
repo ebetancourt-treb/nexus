@@ -387,7 +387,7 @@
 
                     <div class="blum-dropdown-divider"></div>
 
-                    <a href="{{ route('profile.edit') }}" class="blum-dropdown-item">
+                    <a href="{{ route('tenant.profile.edit') }}" class="blum-dropdown-item">
                         <svg class="blum-dropdown-icon" fill="none" stroke="currentColor" stroke-width="2"
                              viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -451,7 +451,7 @@
             </div>
 
             <div class="blum-mobile-actions">
-                <a href="{{ route('profile.edit') }}" class="blum-mobile-link" @click="open = false">
+                <a href="{{ route('tenant.profile.edit') }}" class="blum-mobile-link" @click="open = false">
                     Mi perfil
                 </a>
 

@@ -1,40 +1,45 @@
 <?php
+
 namespace App\Traits;
 
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait BelongsToTenant
 {
-    protected static function bootBelongsToTenant()
+    public static function bootBelongsToTenant(): void
     {
-        // 1. AL CONSULTAR (READ):
+        // AUTO-SCOPE: filtra por tenant actual en todas las queries
         static::addGlobalScope('tenant', function (Builder $builder) {
-            // Si hay usuario logueado
-            if (Auth::check()) {
-                // Si el usuario pertenece a una empresa, filtramos por su ID
-                if (Auth::user()->tenant_id) {
-                    $builder->where('tenant_id', Auth::user()->tenant_id);
-                } 
-                // Si es Super Admin (tenant_id null), NO le mostramos datos de los inquilinos
-                // Esto evita que el Super Admin vea "basura" o datos mezclados por error.
-                else {
-                    $builder->whereNull('tenant_id'); 
-                }
+            $tenantId = app()->bound('current_tenant_id')
+                ? app('current_tenant_id')
+                : null;
+
+            if ($tenantId) {
+                $builder->where($builder->getModel()->getTable() . '.tenant_id', $tenantId);
             }
         });
 
-        // 2. AL CREAR (CREATE):
-        static::creating(function ($model) {
-            if (Auth::check() && Auth::user()->tenant_id) {
-                $model->tenant_id = Auth::user()->tenant_id;
+        // AUTO-FILL: asigna tenant_id al crear un registro
+        static::creating(function (Model $model) {
+            if (empty($model->tenant_id) && app()->bound('current_tenant_id')) {
+                $model->tenant_id = app('current_tenant_id');
             }
         });
     }
 
-    public function tenant()
+    public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Scope para queries sin tenant (superadmin)
+     */
+    public function scopeWithoutTenant(Builder $builder): Builder
+    {
+        return $builder->withoutGlobalScope('tenant');
     }
 }
