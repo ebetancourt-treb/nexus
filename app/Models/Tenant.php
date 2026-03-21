@@ -101,4 +101,10 @@ class Tenant extends Model
     {
         return data_get($this->settings, $key, $default);
     }
+
+    public function getCompanyNameAttribute(): string
+    {
+        return $this->name ?? '—';
+    }
+    
 }
