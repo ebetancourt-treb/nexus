@@ -77,7 +77,7 @@
                                     <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                                 @endforeach
                             </select>
-                            <button type="button" class="btn-small" onclick="document.getElementById('newCatRow').classList.toggle('visible')">+ Nueva</button>
+                            <button type="button" class="btn-small" id="toggleCatBtn" onclick="toggleNewCategory()">+ Nueva</button>
                         </div>
                     </div>
 
@@ -189,6 +189,24 @@
 
     @push('scripts')
     <script>
+        function toggleNewCategory() {
+            const row = document.getElementById('newCatRow');
+            const btn = document.getElementById('toggleCatBtn');
+            const isVisible = row.classList.toggle('visible');
+            
+            if (isVisible) {
+                btn.textContent = '✕ Cancelar';
+                btn.style.borderColor = '#ef4444';
+                btn.style.color = '#ef4444';
+                document.getElementById('newCatName').focus();
+            } else {
+                btn.textContent = '+ Nueva';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                document.getElementById('newCatName').value = '';
+            }
+        }
+
         function createCategory() {
             const name = document.getElementById('newCatName').value.trim();
             if (!name) return;
