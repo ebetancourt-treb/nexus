@@ -66,6 +66,11 @@ class Tenant extends Model
 
     // ── Helpers ──
 
+    public function getCompanyNameAttribute(): string
+    {
+        return $this->name ?? '—';
+    }
+
     public function currentPlan(): ?Plan
     {
         return $this->activeSubscription?->plan;
