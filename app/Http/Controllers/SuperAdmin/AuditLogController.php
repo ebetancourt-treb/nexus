@@ -11,12 +11,12 @@ class AuditLogController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = AuditLog::with(['user', 'tenant'])->latest();
+        $query = AuditLog::with(['user', 'tenant'])->latest('created_at');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('action', 'like', "%{$search}%")
-                  ->orWhere('entity_type', 'like', "%{$search}%")
+                $q->where('event', 'like', "%{$search}%")
+                  ->orWhere('auditable_type', 'like', "%{$search}%")
                   ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
             });
         }

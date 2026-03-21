@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToTenant;
+use App\Traits\Auditable;
 use App\Traits\HasWarehouse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Movement extends Model
 {
-    use HasFactory, BelongsToTenant, HasWarehouse;
+    use HasFactory, BelongsToTenant, HasWarehouse, Auditable;
 
     protected $fillable = [
         'tenant_id',

@@ -35,12 +35,12 @@
                         <td style="font-size:0.78rem;">{{ $log->user?->name ?? '—' }}</td>
                         <td>
                             @php
-                                $actionColors = ['created' => 'sa-badge-green', 'updated' => 'sa-badge-blue', 'deleted' => 'sa-badge-red', 'login' => 'sa-badge-amber'];
+                                $eventColors = ['created' => 'sa-badge-green', 'updated' => 'sa-badge-blue', 'deleted' => 'sa-badge-red', 'login' => 'sa-badge-amber', 'status_changed' => 'sa-badge-amber'];
                             @endphp
-                            <span class="sa-badge {{ $actionColors[$log->action] ?? 'sa-badge-gray' }}">{{ $log->action }}</span>
+                            <span class="sa-badge {{ $eventColors[$log->event] ?? 'sa-badge-gray' }}">{{ $log->event }}</span>
                         </td>
-                        <td style="font-size:0.78rem; color:var(--sa-text-secondary);">{{ $log->entity_type }}</td>
-                        <td style="font-size:0.72rem; color:var(--sa-text-light);">{{ $log->entity_id ?? '—' }}</td>
+                        <td style="font-size:0.78rem; color:var(--sa-text-secondary);">{{ class_basename($log->auditable_type) }}</td>
+                        <td style="font-size:0.72rem; color:var(--sa-text-light);">{{ $log->auditable_id ?? '—' }}</td>
                     </tr>
                 @endforeach
                 </tbody>

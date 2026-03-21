@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Traits\BelongsToTenant;
+use App\Traits\Auditable;
 use App\Traits\HasWarehouse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockLevel extends Model
 {
-    use BelongsToTenant, HasWarehouse;
+    use BelongsToTenant, HasWarehouse, Auditable;
 
     protected $fillable = [
         'tenant_id',
