@@ -59,10 +59,20 @@
                             @endif
                         </td>
                         <td style="font-size:0.75rem; color:var(--sa-text-light);">
-                            {{ $sub->trial_ends_at?->format('d/m/Y') ?? '—' }}
+                            @if($sub->trial_ends_at)
+                                {{ $sub->trial_ends_at->format('d/m/Y') }}
+                                @if($isTrialing && !$trialExpired)
+                                    <div style="font-size:0.68rem; color:{{ $daysLeft <= 3 ? '#f87171' : '#fbbf24' }}; font-weight:600;">{{ $daysLeft }} días restantes</div>
+                                @elseif($trialExpired)
+                                    <div style="font-size:0.68rem; color:#f87171; font-weight:600;">Expirado</div>
+                                @endif
+                            @else
+                                —
+                            @endif
                         </td>
                         <td>
-                            <form action="{{ route('superadmin.subscriptions.change-plan', $sub) }}" method="POST" style="display:flex; gap:6px;">
+                            <form action="{{ route('superadmin.subscriptions.change-plan', $sub) }}" method="POST" style="display:flex; gap:6px;"
+                                  onsubmit="return confirm('¿Cambiar el plan de {{ $sub->tenant?->company_name }} a ' + this.plan_id.options[this.plan_id.selectedIndex].text + '?')">
                                 @csrf @method('PATCH')
                                 <select name="plan_id" class="sa-filter-select" style="font-size:0.72rem; padding:4px 8px;">
                                     @foreach($plans as $plan)
@@ -73,8 +83,9 @@
                             </form>
                         </td>
                         <td style="text-align:right;">
-                            @if($isTrialing && !$trialExpired)
-                                <form action="{{ route('superadmin.subscriptions.extend-trial', $sub) }}" method="POST" style="display:inline;">
+                            @if($isTrialing)
+                                <form action="{{ route('superadmin.subscriptions.extend-trial', $sub) }}" method="POST" style="display:inline;"
+                                      onsubmit="return confirm('¿Extender el trial de {{ $sub->tenant?->company_name }} por 7 días más?')">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="sa-btn" title="Extender trial 7 días">+7 días</button>
                                 </form>

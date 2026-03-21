@@ -32,7 +32,8 @@
                     <tr>
                         <th>Empresa</th>
                         <th>Plan</th>
-                        <th>Estado trial</th>
+                        <th>Estado</th>
+                        <th>Días restantes</th>
                         <th>Usuarios</th>
                         <th>Almacenes</th>
                         <th>Activo</th>
@@ -58,11 +59,22 @@
                             @if($trialExpired)
                                 <span class="sa-badge sa-badge-red">Trial expirado</span>
                             @elseif($isTrialing)
-                                <span class="sa-badge sa-badge-amber">{{ $daysLeft }}d restantes</span>
+                                <span class="sa-badge sa-badge-amber">Trial</span>
                             @elseif($sub?->status === 'active')
                                 <span class="sa-badge sa-badge-green">Activo</span>
                             @else
                                 <span class="sa-badge sa-badge-gray">{{ $sub?->status ?? '—' }}</span>
+                            @endif
+                        </td>
+                        <td style="font-size:0.78rem; text-align:center;">
+                            @if($trialExpired)
+                                <span style="color:#f87171; font-weight:600;">Expirado</span>
+                            @elseif($daysLeft !== null)
+                                <span style="color:{{ $daysLeft <= 3 ? '#f87171' : ($daysLeft <= 5 ? '#fbbf24' : '#34d399') }}; font-weight:600;">{{ $daysLeft }}d</span>
+                            @elseif($sub?->status === 'active')
+                                <span style="color:var(--sa-text-light);">—</span>
+                            @else
+                                <span style="color:var(--sa-text-light);">—</span>
                             @endif
                         </td>
                         <td style="font-size:0.78rem;">{{ $tenant->users_count }}</td>
@@ -78,7 +90,8 @@
                         <td style="text-align:right;">
                             <div style="display:flex; gap:6px; justify-content:flex-end;">
                                 <a href="{{ route('superadmin.tenants.show', $tenant) }}" class="sa-btn">Ver</a>
-                                <form action="{{ route('superadmin.tenants.toggle', $tenant) }}" method="POST">
+                                <form action="{{ route('superadmin.tenants.toggle', $tenant) }}" method="POST"
+                                      onsubmit="return confirm('¿Estás seguro de {{ $tenant->is_active ? 'DESACTIVAR' : 'activar' }} a {{ $tenant->company_name }}?{{ $tenant->is_active ? ' Sus usuarios no podrán acceder al sistema.' : '' }}')">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="sa-btn {{ $tenant->is_active ? 'sa-btn-danger' : '' }}">
                                         {{ $tenant->is_active ? 'Desactivar' : 'Activar' }}

@@ -48,11 +48,14 @@ class SubscriptionManagementController extends Controller
     public function extendTrial(Subscription $subscription): RedirectResponse
     {
         if ($subscription->status !== 'trialing') {
-            return back()->withErrors(['error' => 'Solo se puede extender trials activos.']);
+            return back()->withErrors(['error' => 'Solo se puede extender trials.']);
         }
 
+        // Si ya expiró, extender desde hoy; si no, desde la fecha actual de expiración
+        $baseDate = $subscription->trial_ends_at->isPast() ? now() : $subscription->trial_ends_at;
+
         $subscription->update([
-            'trial_ends_at' => $subscription->trial_ends_at->addDays(7),
+            'trial_ends_at' => $baseDate->addDays(7),
         ]);
 
         return back()->with('success', "Trial extendido 7 días para {$subscription->tenant->company_name}.");

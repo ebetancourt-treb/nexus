@@ -12,7 +12,8 @@
         </div>
         <div style="display:flex; gap:8px;">
             <a href="{{ route('superadmin.tenants.index') }}" class="sa-btn">Volver</a>
-            <form action="{{ route('superadmin.tenants.toggle', $tenant) }}" method="POST">
+            <form action="{{ route('superadmin.tenants.toggle', $tenant) }}" method="POST"
+                  onsubmit="return confirm('¿Estás seguro de {{ $tenant->is_active ? 'DESACTIVAR' : 'activar' }} a {{ $tenant->company_name }}?{{ $tenant->is_active ? ' Sus usuarios no podrán acceder al sistema.' : '' }}')">
                 @csrf @method('PATCH')
                 <button type="submit" class="sa-btn {{ $tenant->is_active ? 'sa-btn-danger' : 'sa-btn-primary' }}">
                     {{ $tenant->is_active ? 'Desactivar tenant' : 'Activar tenant' }}
