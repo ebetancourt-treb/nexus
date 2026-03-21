@@ -86,8 +86,11 @@
                             <label class="form-label">Nueva categoría</label>
                             <input type="text" id="newCatName" class="form-input" placeholder="Nombre de la categoría">
                         </div>
-                        <button type="button" class="btn-small" style="align-self: flex-end; padding: 9px 14px;" onclick="createCategory()">Crear</button>
+                        <div style="display:flex; align-items:flex-end; padding-bottom:1px;">
+                            <button type="button" class="btn-small" onclick="createCategory()">Crear</button>
+                        </div>
                     </div>
+
 
                     <div class="form-group">
                         <label class="form-label" for="sku">SKU *</label>
