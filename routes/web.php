@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdmin\AuditLogController;
 use App\Http\Controllers\SuperAdmin\SubscriptionManagementController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
@@ -11,6 +10,7 @@ use App\Http\Controllers\Tenant\MovementController;
 use App\Http\Controllers\Tenant\ProductController;
 use App\Http\Controllers\Tenant\ProductSearchController;
 use App\Http\Controllers\Tenant\StockController;
+use App\Http\Controllers\Tenant\TenantProfileController;
 use App\Http\Controllers\Tenant\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
@@ -65,10 +65,11 @@ Route::middleware(['auth', 'set_warehouse'])
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+        Route::get('/profile', [TenantProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [TenantProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [TenantProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::put('/profile/company', [TenantProfileController::class, 'updateCompany'])->name('profile.company');
+        Route::delete('/profile', [TenantProfileController::class, 'destroy'])->name('profile.destroy');
 
         // Almacenes
         Route::resource('warehouses', WarehouseController::class)->except(['show']);
