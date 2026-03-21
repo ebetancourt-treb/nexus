@@ -34,7 +34,9 @@ class WarehouseController extends Controller
             ]);
         }
 
-        return view('tenant.warehouses.create');
+        $canUseFEFO = $tenant->hasFeature('lots.enabled');
+
+        return view('tenant.warehouses.create', compact('canUseFEFO'));
     }
 
     public function store(StoreWarehouseRequest $request): RedirectResponse
@@ -50,6 +52,11 @@ class WarehouseController extends Controller
 
         $data = $request->validated();
 
+        // FEFO requiere que el plan tenga lotes habilitados
+        if (($data['rotation_strategy'] ?? '') === 'fefo' && !$tenant->hasFeature('lots.enabled')) {
+            return back()->withErrors(['rotation_strategy' => 'La estrategia FEFO (primero en expirar) requiere control por lotes. Actualiza tu plan para usar esta opción.'])->withInput();
+        }
+
         // Si es el primero, hacerlo default
         if ($currentCount === 0) {
             $data['is_default'] = true;
@@ -63,12 +70,22 @@ class WarehouseController extends Controller
 
     public function edit(Warehouse $warehouse): View
     {
-        return view('tenant.warehouses.edit', compact('warehouse'));
+        $canUseFEFO = auth()->user()->tenant->hasFeature('lots.enabled');
+
+        return view('tenant.warehouses.edit', compact('warehouse', 'canUseFEFO'));
     }
 
     public function update(UpdateWarehouseRequest $request, Warehouse $warehouse): RedirectResponse
     {
-        $warehouse->update($request->validated());
+        $data = $request->validated();
+        $tenant = auth()->user()->tenant;
+
+        // FEFO requiere lotes habilitados en el plan
+        if (($data['rotation_strategy'] ?? '') === 'fefo' && $warehouse->rotation_strategy !== 'fefo' && !$tenant->hasFeature('lots.enabled')) {
+            return back()->withErrors(['rotation_strategy' => 'La estrategia FEFO requiere control por lotes. Actualiza tu plan.'])->withInput();
+        }
+
+        $warehouse->update($data);
 
         return redirect()->route('tenant.warehouses.index')
             ->with('success', 'Almacén actualizado correctamente.');

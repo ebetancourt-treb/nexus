@@ -77,7 +77,7 @@
                         <label class="form-label" for="rotation_strategy">Estrategia de rotación *</label>
                         <select name="rotation_strategy" id="rotation_strategy" class="form-select" required>
                             <option value="fifo" {{ old('rotation_strategy', 'fifo') === 'fifo' ? 'selected' : '' }}>FIFO — Primero en entrar, primero en salir</option>
-                            <option value="fefo" {{ old('rotation_strategy') === 'fefo' ? 'selected' : '' }}>FEFO — Primero en expirar, primero en salir</option>
+                            <option value="fefo" {{ old('rotation_strategy') === 'fefo' ? 'selected' : '' }} {{ $canUseFEFO ? '' : 'disabled' }}>FEFO — Primero en expirar, primero en salir {{ $canUseFEFO ? '' : '(Plan Profesional)' }}</option>
                             <option value="manual" {{ old('rotation_strategy') === 'manual' ? 'selected' : '' }}>Manual — Sin regla automática</option>
                         </select>
                         @error('rotation_strategy') <span class="form-error">{{ $message }}</span> @enderror

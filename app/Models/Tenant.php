@@ -30,6 +30,13 @@ class Tenant extends Model
         ];
     }
 
+    // ── Accessors ──
+
+    public function getCompanyNameAttribute(): string
+    {
+        return $this->name ?? '—';
+    }
+
     // ── Relationships ──
 
     public function users(): HasMany
@@ -64,12 +71,7 @@ class Tenant extends Model
         return $this->hasMany(ApiToken::class);
     }
 
-    // ── Helpers ──
-
-    public function getCompanyNameAttribute(): string
-    {
-        return $this->name ?? '—';
-    }
+    // ── Plan helpers ──
 
     public function currentPlan(): ?Plan
     {
@@ -103,8 +105,18 @@ class Tenant extends Model
         return $limit === -1 || $currentCount < $limit; // -1 = ilimitado
     }
 
+    // ── Settings ──
+
     public function getSetting(string $key, mixed $default = null): mixed
     {
         return data_get($this->settings, $key, $default);
+    }
+
+    /**
+     * Verifica si el tenant puede agregar más usuarios según su plan.
+     */
+    public function canAddUser(): bool
+    {
+        return $this->isWithinLimit('max_users', $this->users()->count());
     }
 }

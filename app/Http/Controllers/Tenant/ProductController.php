@@ -73,8 +73,10 @@ class ProductController extends Controller
         }
 
         $categories = Category::orderBy('name')->get();
+        $canTrackLots = $tenant->hasFeature('lots.enabled');
+        $canTrackSerials = $tenant->hasFeature('serials.enabled');
 
-        return view('tenant.products.create', compact('categories'));
+        return view('tenant.products.create', compact('categories', 'canTrackLots', 'canTrackSerials'));
     }
 
     public function store(StoreProductRequest $request): RedirectResponse
@@ -85,6 +87,15 @@ class ProductController extends Controller
 
         if ($plan && !$tenant->isWithinLimit('max_skus', $currentCount)) {
             return back()->withErrors(['limit' => 'Has alcanzado el límite de productos de tu plan.']);
+        }
+
+        // Validar features de tracking
+        if ($request->boolean('track_lots') && !$tenant->hasFeature('lots.enabled')) {
+            return back()->withErrors(['track_lots' => 'Tu plan no incluye control por lotes. Actualiza tu plan para activar esta opción.'])->withInput();
+        }
+
+        if ($request->boolean('track_serials') && !$tenant->hasFeature('serials.enabled')) {
+            return back()->withErrors(['track_serials' => 'Tu plan no incluye control por número de serie. Actualiza tu plan para activar esta opción.'])->withInput();
         }
 
         Product::create($request->validated());
@@ -114,13 +125,27 @@ class ProductController extends Controller
 
     public function edit(Product $product): View
     {
+        $tenant = auth()->user()->tenant;
         $categories = Category::orderBy('name')->get();
+        $canTrackLots = $tenant->hasFeature('lots.enabled');
+        $canTrackSerials = $tenant->hasFeature('serials.enabled');
 
-        return view('tenant.products.edit', compact('product', 'categories'));
+        return view('tenant.products.edit', compact('product', 'categories', 'canTrackLots', 'canTrackSerials'));
     }
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        $tenant = auth()->user()->tenant;
+
+        // Validar features de tracking (solo si se están activando, no si ya estaban)
+        if ($request->boolean('track_lots') && !$product->track_lots && !$tenant->hasFeature('lots.enabled')) {
+            return back()->withErrors(['track_lots' => 'Tu plan no incluye control por lotes.'])->withInput();
+        }
+
+        if ($request->boolean('track_serials') && !$product->track_serials && !$tenant->hasFeature('serials.enabled')) {
+            return back()->withErrors(['track_serials' => 'Tu plan no incluye control por número de serie.'])->withInput();
+        }
+
         $product->update($request->validated());
 
         return redirect()->route('tenant.products.index')

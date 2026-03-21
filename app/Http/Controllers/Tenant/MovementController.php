@@ -55,16 +55,7 @@ class MovementController extends Controller
         $warehouses = Warehouse::where('is_active', true)->get();
         $products = Product::where('is_active', true)->orderBy('name')->get();
 
-        $productsJson = $products->map(function ($p) {
-            return [
-                'id' => $p->id,
-                'name' => $p->name,
-                'sku' => $p->sku,
-                'track_lots' => $p->track_lots,
-            ];
-        })->values();
-
-        return view('tenant.movements.create-receiving', compact('warehouses', 'products', 'productsJson'));
+        return view('tenant.movements.create-receiving', compact('warehouses', 'products'));
     }
 
     /**
@@ -83,6 +74,14 @@ class MovementController extends Controller
             'lines.*.lot_number' => ['nullable', 'string', 'max:50'],
             'lines.*.expires_at' => ['nullable', 'date'],
         ]);
+
+        $tenant = auth()->user()->tenant;
+
+        // Validar si el plan permite lotes
+        $hasLotData = collect($request->lines)->contains(fn ($line) => !empty($line['lot_number']));
+        if ($hasLotData && !$tenant->hasFeature('lots.enabled')) {
+            return back()->withErrors(['error' => 'Tu plan no incluye control por lotes. Actualiza tu plan para usar esta funcionalidad.'])->withInput();
+        }
 
         try {
             DB::transaction(function () use ($request) {
@@ -147,15 +146,7 @@ class MovementController extends Controller
         $warehouses = Warehouse::where('is_active', true)->get();
         $products = Product::where('is_active', true)->orderBy('name')->get();
 
-        $productsJson = $products->map(function ($p) {
-            return [
-                'id' => $p->id,
-                'name' => $p->name,
-                'sku' => $p->sku,
-            ];
-        })->values();
-
-        return view('tenant.movements.create-dispatch', compact('warehouses', 'products', 'productsJson'));
+        return view('tenant.movements.create-dispatch', compact('warehouses', 'products'));
     }
 
     /**

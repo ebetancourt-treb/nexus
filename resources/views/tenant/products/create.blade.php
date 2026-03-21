@@ -77,7 +77,7 @@
                                     <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                                 @endforeach
                             </select>
-                            <button type="button" class="btn-small" id="toggleCatBtn" onclick="toggleNewCategory()">+ Nueva</button>
+                            <button type="button" class="btn-small" onclick="document.getElementById('newCatRow').classList.toggle('visible')">+ Nueva</button>
                         </div>
                     </div>
 
@@ -86,7 +86,7 @@
                             <label class="form-label">Nueva categoría</label>
                             <input type="text" id="newCatName" class="form-input" placeholder="Nombre de la categoría">
                         </div>
-                        <button type="button" class="btn-small" style="margin-bottom: 6px;" onclick="createCategory()">Crear</button>
+                        <button type="button" class="btn-small" style="align-self: flex-end; padding: 9px 14px;" onclick="createCategory()">Crear</button>
                     </div>
 
                     <div class="form-group">
@@ -158,21 +158,21 @@
                     <div class="form-section-label">Tracking avanzado</div>
 
                     <div class="form-group full">
-                        <div class="toggle-row">
-                            <input type="checkbox" name="track_lots" id="track_lots" class="form-checkbox" value="1" {{ old('track_lots') ? 'checked' : '' }}>
+                        <div class="toggle-row" style="{{ $canTrackLots ? '' : 'opacity: 0.5;' }}">
+                            <input type="checkbox" name="track_lots" id="track_lots" class="form-checkbox" value="1" {{ old('track_lots') ? 'checked' : '' }} {{ $canTrackLots ? '' : 'disabled' }}>
                             <div>
-                                <div class="toggle-label">Control por lotes</div>
-                                <div class="toggle-hint">Cada entrada requiere número de lote y fecha de caducidad</div>
+                                <div class="toggle-label">Control por lotes @unless($canTrackLots)<span style="font-size:0.68rem; color:#d97706; font-weight:400;">(Plan Profesional)</span>@endunless</div>
+                                <div class="toggle-hint">{{ $canTrackLots ? 'Cada entrada requiere número de lote y fecha de caducidad' : 'Actualiza tu plan para habilitar control por lotes' }}</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group full">
-                        <div class="toggle-row">
-                            <input type="checkbox" name="track_serials" id="track_serials" class="form-checkbox" value="1" {{ old('track_serials') ? 'checked' : '' }}>
+                        <div class="toggle-row" style="{{ $canTrackSerials ? '' : 'opacity: 0.5;' }}">
+                            <input type="checkbox" name="track_serials" id="track_serials" class="form-checkbox" value="1" {{ old('track_serials') ? 'checked' : '' }} {{ $canTrackSerials ? '' : 'disabled' }}>
                             <div>
-                                <div class="toggle-label">Control por número de serie</div>
-                                <div class="toggle-hint">Cada unidad se identifica con un número de serie único</div>
+                                <div class="toggle-label">Control por número de serie @unless($canTrackSerials)<span style="font-size:0.68rem; color:#d97706; font-weight:400;">(Plan Profesional)</span>@endunless</div>
+                                <div class="toggle-hint">{{ $canTrackSerials ? 'Cada unidad se identifica con un número de serie único' : 'Actualiza tu plan para habilitar control por series' }}</div>
                             </div>
                         </div>
                     </div>
@@ -189,24 +189,6 @@
 
     @push('scripts')
     <script>
-        function toggleNewCategory() {
-            const row = document.getElementById('newCatRow');
-            const btn = document.getElementById('toggleCatBtn');
-            const isVisible = row.classList.toggle('visible');
-            
-            if (isVisible) {
-                btn.textContent = '✕ Cancelar';
-                btn.style.borderColor = '#ef4444';
-                btn.style.color = '#ef4444';
-                document.getElementById('newCatName').focus();
-            } else {
-                btn.textContent = '+ Nueva';
-                btn.style.borderColor = '';
-                btn.style.color = '';
-                document.getElementById('newCatName').value = '';
-            }
-        }
-
         function createCategory() {
             const name = document.getElementById('newCatName').value.trim();
             if (!name) return;

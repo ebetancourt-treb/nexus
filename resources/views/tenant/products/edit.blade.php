@@ -133,21 +133,23 @@
                     <div class="form-section-label">Tracking avanzado</div>
 
                     <div class="form-group full">
-                        <div class="toggle-row">
-                            <input type="checkbox" name="track_lots" id="track_lots" class="form-checkbox" value="1" {{ old('track_lots', $product->track_lots) ? 'checked' : '' }}>
+                        @php $lotsDisabled = !$canTrackLots && !$product->track_lots; @endphp
+                        <div class="toggle-row" style="{{ $lotsDisabled ? 'opacity: 0.5;' : '' }}">
+                            <input type="checkbox" name="track_lots" id="track_lots" class="form-checkbox" value="1" {{ old('track_lots', $product->track_lots) ? 'checked' : '' }} {{ $lotsDisabled ? 'disabled' : '' }}>
                             <div>
-                                <div class="toggle-label">Control por lotes</div>
-                                <div class="toggle-hint">Número de lote y fecha de caducidad por entrada</div>
+                                <div class="toggle-label">Control por lotes @if($lotsDisabled)<span style="font-size:0.68rem; color:#d97706; font-weight:400;">(Plan Profesional)</span>@endif</div>
+                                <div class="toggle-hint">{{ $lotsDisabled ? 'Actualiza tu plan para habilitar control por lotes' : 'Número de lote y fecha de caducidad por entrada' }}</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group full">
-                        <div class="toggle-row">
-                            <input type="checkbox" name="track_serials" id="track_serials" class="form-checkbox" value="1" {{ old('track_serials', $product->track_serials) ? 'checked' : '' }}>
+                        @php $serialsDisabled = !$canTrackSerials && !$product->track_serials; @endphp
+                        <div class="toggle-row" style="{{ $serialsDisabled ? 'opacity: 0.5;' : '' }}">
+                            <input type="checkbox" name="track_serials" id="track_serials" class="form-checkbox" value="1" {{ old('track_serials', $product->track_serials) ? 'checked' : '' }} {{ $serialsDisabled ? 'disabled' : '' }}>
                             <div>
-                                <div class="toggle-label">Control por número de serie</div>
-                                <div class="toggle-hint">Cada unidad con número de serie único</div>
+                                <div class="toggle-label">Control por número de serie @if($serialsDisabled)<span style="font-size:0.68rem; color:#d97706; font-weight:400;">(Plan Profesional)</span>@endif</div>
+                                <div class="toggle-hint">{{ $serialsDisabled ? 'Actualiza tu plan para habilitar control por series' : 'Cada unidad con número de serie único' }}</div>
                             </div>
                         </div>
                     </div>
