@@ -1,5 +1,5 @@
 <x-tenant-layout>
-    <x-slot:title>Seleccionar lotes — {{ $order->order_number }}</x-slot:title>
+    <x-slot:title>Seleccionar lotes — {{ $dispatchOrder->order_number }}</x-slot:title>
     <x-slot:header>Seleccionar lotes</x-slot:header>
 
     @push('styles')
@@ -65,16 +65,16 @@
 
     <div class="order-header">
         <div>
-            <div class="order-title">{{ $order->order_number }}</div>
-            <div class="order-meta">Cliente: {{ $order->customer_name }} · {{ $order->warehouse?->name }} @if($order->customer_reference) · Ref: {{ $order->customer_reference }} @endif</div>
+            <div class="order-title">{{ $dispatchOrder->order_number }}</div>
+            <div class="order-meta">Cliente: {{ $dispatchOrder->customer_name }} · {{ $dispatchOrder->warehouse?->name }} @if($dispatchOrder->customer_reference) · Ref: {{ $dispatchOrder->customer_reference }} @endif</div>
         </div>
         <div style="display:flex; gap:8px;">
-            <form action="{{ route('tenant.dispatch-orders.cancel', $order) }}" method="POST" onsubmit="return confirm('¿Cancelar esta orden y liberar todo el stock reservado?')">
+            <form action="{{ route('tenant.dispatch-orders.cancel', $dispatchOrder) }}" method="POST" onsubmit="return confirm('¿Cancelar esta orden y liberar todo el stock reservado?')">
                 @csrf @method('PATCH')
                 <button type="submit" class="btn-action btn-danger">Cancelar orden</button>
             </form>
-            @if($order->lines->count() > 0)
-                <form action="{{ route('tenant.dispatch-orders.start-picking', $order) }}" method="POST" onsubmit="return confirm('¿Iniciar picking? No podrás agregar más productos después.')">
+            @if($dispatchOrder->lines->count() > 0)
+                <form action="{{ route('tenant.dispatch-orders.start-picking', $dispatchOrder) }}" method="POST" onsubmit="return confirm('¿Iniciar picking? No podrás agregar más productos después.')">
                     @csrf @method('PATCH')
                     <button type="submit" class="btn-action btn-primary">Iniciar picking →</button>
                 </form>
@@ -86,7 +86,7 @@
     <div class="card">
         <div class="card-header"><span class="card-title">Agregar producto al pedido</span></div>
         <div class="card-body">
-            <form action="{{ route('tenant.dispatch-orders.add-line', $order) }}" method="POST" class="add-form" id="addLineForm">
+            <form action="{{ route('tenant.dispatch-orders.add-line', $dispatchOrder) }}" method="POST" class="add-form" id="addLineForm">
                 @csrf
                 <div>
                     <div class="add-label">Producto</div>
@@ -115,21 +115,21 @@
     {{-- Líneas del pedido --}}
     <div class="card">
         <div class="card-header">
-            <span class="card-title">Productos en este pedido ({{ $order->lines->count() }} líneas)</span>
-            <span class="badge {{ $order->status === 'reserved' ? 'badge-amber' : 'badge-green' }}">{{ $order->status === 'reserved' ? 'Stock reservado' : 'Borrador' }}</span>
+            <span class="card-title">Productos en este pedido ({{ $dispatchOrder->lines->count() }} líneas)</span>
+            <span class="badge {{ $dispatchOrder->status === 'reserved' ? 'badge-amber' : 'badge-green' }}">{{ $dispatchOrder->status === 'reserved' ? 'Stock reservado' : 'Borrador' }}</span>
         </div>
-        @if($order->lines->count() > 0)
+        @if($dispatchOrder->lines->count() > 0)
             <table class="lines-table">
                 <thead><tr><th>Producto</th><th>Lote</th><th>Caducidad</th><th>Cantidad</th><th style="text-align:right;">Acción</th></tr></thead>
                 <tbody>
-                @foreach($order->lines as $line)
+                @foreach($dispatchOrder->lines as $line)
                     <tr>
                         <td style="font-weight:600;">{{ $line->product?->name }}<br><span style="font-size:0.7rem; color:var(--text-light);">{{ $line->product?->sku }}</span></td>
                         <td>{{ $line->lot?->lot_number ?? '—' }}</td>
                         <td style="font-size:0.78rem;">{{ $line->lot?->expires_at?->format('d/m/Y') ?? '—' }}</td>
                         <td style="font-weight:600;">{{ number_format($line->quantity_requested) }}</td>
                         <td style="text-align:right;">
-                            <form action="{{ route('tenant.dispatch-orders.remove-line', [$order, $line]) }}" method="POST" onsubmit="return confirm('¿Quitar este producto? El stock se liberará.')">
+                            <form action="{{ route('tenant.dispatch-orders.remove-line', [$dispatchOrder, $line]) }}" method="POST" onsubmit="return confirm('¿Quitar este producto? El stock se liberará.')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn-sm danger">Quitar</button>
                             </form>

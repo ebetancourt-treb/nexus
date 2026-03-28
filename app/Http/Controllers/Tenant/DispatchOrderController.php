@@ -61,7 +61,7 @@ class DispatchOrderController extends Controller
 
     public function selectLots(DispatchOrder $dispatchOrder): View
     {
-        if (!in_array($order->status, ['draft', 'reserved'])) {
+        if (!in_array($dispatchOrder->status, ['draft', 'reserved'])) {
             return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $dispatchOrder->id]);
         }
         $order->load('lines.product', 'lines.lot');
