@@ -1,5 +1,5 @@
 <x-tenant-layout>
-    <x-slot:title>{{ $order->order_number }}</x-slot:title>
+    <x-slot:title>{{ $dispatchOrder->order_number }}</x-slot:title>
     <x-slot:header>Orden de despacho</x-slot:header>
 
     @push('styles')
@@ -50,37 +50,37 @@
 
     @php
         $statusMap = ['draft'=>['Borrador','badge-gray'],'reserved'=>['Reservado','badge-amber'],'picking'=>['En picking','badge-blue'],'picked'=>['Picking completo','badge-green'],'dispatched'=>['Despachado','badge-green'],'canceled'=>['Cancelado','badge-red']];
-        $s = $statusMap[$order->status] ?? ['—','badge-gray'];
+        $s = $statusMap[$dispatchOrder->status] ?? ['—','badge-gray'];
     @endphp
 
     <div class="order-header">
         <div>
-            <div class="order-title">{{ $order->order_number }}</div>
+            <div class="order-title">{{ $dispatchOrder->order_number }}</div>
             <div class="order-meta">
                 <span class="badge {{ $s[1] }}">{{ $s[0] }}</span>
-                <span style="font-size:0.78rem; color:var(--text-secondary);">{{ $order->customer_name }}</span>
-                @if($order->customer_reference) <span style="font-size:0.78rem; color:var(--text-light);">Ref: {{ $order->customer_reference }}</span> @endif
+                <span style="font-size:0.78rem; color:var(--text-secondary);">{{ $dispatchOrder->customer_name }}</span>
+                @if($dispatchOrder->customer_reference) <span style="font-size:0.78rem; color:var(--text-light);">Ref: {{ $dispatchOrder->customer_reference }}</span> @endif
             </div>
         </div>
         <div class="actions">
             <a href="{{ route('tenant.dispatch-orders.index') }}" class="btn-action btn-outline">Volver</a>
-            @if(in_array($order->status, ['draft', 'reserved']))
-                <a href="{{ route('tenant.dispatch-orders.select-lots', $order) }}" class="btn-action btn-outline">Editar lotes</a>
+            @if(in_array($dispatchOrder->status, ['draft', 'reserved']))
+                <a href="{{ route('tenant.dispatch-orders.select-lots', $dispatchOrder) }}" class="btn-action btn-outline">Editar lotes</a>
             @endif
-            @if($order->status === 'picking')
-                <a href="{{ route('tenant.dispatch-orders.picking', $order) }}" class="btn-action btn-jade">Continuar picking</a>
+            @if($dispatchOrder->status === 'picking')
+                <a href="{{ route('tenant.dispatch-orders.picking', $dispatchOrder) }}" class="btn-action btn-jade">Continuar picking</a>
             @endif
-            @if($order->status === 'picked')
-                <form action="{{ route('tenant.dispatch-orders.dispatch', $order) }}" method="POST" onsubmit="return confirm('¿Confirmar despacho? El stock se restará definitivamente.')">
+            @if($dispatchOrder->status === 'picked')
+                <form action="{{ route('tenant.dispatch-orders.dispatch', $dispatchOrder) }}" method="POST" onsubmit="return confirm('¿Confirmar despacho? El stock se restará definitivamente.')">
                     @csrf @method('PATCH')
                     <button type="submit" class="btn-action btn-jade">Confirmar despacho</button>
                 </form>
             @endif
-            @if($order->status === 'dispatched')
-                <a href="{{ route('tenant.dispatch-orders.exit-pdf', $order) }}" target="_blank" class="btn-action btn-outline">Documento de salida</a>
+            @if($dispatchOrder->status === 'dispatched')
+                <a href="{{ route('tenant.dispatch-orders.exit-pdf', $dispatchOrder) }}" target="_blank" class="btn-action btn-outline">Documento de salida</a>
             @endif
-            @if(!in_array($order->status, ['dispatched', 'canceled']))
-                <form action="{{ route('tenant.dispatch-orders.cancel', $order) }}" method="POST" onsubmit="return confirm('¿Cancelar esta orden?')">
+            @if(!in_array($dispatchOrder->status, ['dispatched', 'canceled']))
+                <form action="{{ route('tenant.dispatch-orders.cancel', $dispatchOrder) }}" method="POST" onsubmit="return confirm('¿Cancelar esta orden?')">
                     @csrf @method('PATCH')
                     <button type="submit" class="btn-action btn-red">Cancelar</button>
                 </form>
@@ -92,15 +92,15 @@
         <div class="card">
             <div class="card-header"><span class="card-title">Información</span></div>
             <div class="card-body">
-                <div class="info-row"><span class="info-label">Cliente</span><span class="info-value">{{ $order->customer_name }}</span></div>
-                <div class="info-row"><span class="info-label">Referencia</span><span class="info-value">{{ $order->customer_reference ?? '—' }}</span></div>
-                <div class="info-row"><span class="info-label">Almacén</span><span class="info-value">{{ $order->warehouse?->name }}</span></div>
-                <div class="info-row"><span class="info-label">Creado por</span><span class="info-value">{{ $order->createdBy?->name }}</span></div>
-                @if($order->confirmedBy)
-                    <div class="info-row"><span class="info-label">Despachado por</span><span class="info-value">{{ $order->confirmedBy->name }}</span></div>
+                <div class="info-row"><span class="info-label">Cliente</span><span class="info-value">{{ $dispatchOrder->customer_name }}</span></div>
+                <div class="info-row"><span class="info-label">Referencia</span><span class="info-value">{{ $dispatchOrder->customer_reference ?? '—' }}</span></div>
+                <div class="info-row"><span class="info-label">Almacén</span><span class="info-value">{{ $dispatchOrder->warehouse?->name }}</span></div>
+                <div class="info-row"><span class="info-label">Creado por</span><span class="info-value">{{ $dispatchOrder->createdBy?->name }}</span></div>
+                @if($dispatchOrder->confirmedBy)
+                    <div class="info-row"><span class="info-label">Despachado por</span><span class="info-value">{{ $dispatchOrder->confirmedBy->name }}</span></div>
                 @endif
-                @if($order->notes)
-                    <div class="info-row" style="flex-direction:column; gap:4px;"><span class="info-label">Notas</span><span style="font-size:0.8rem;">{{ $order->notes }}</span></div>
+                @if($dispatchOrder->notes)
+                    <div class="info-row" style="flex-direction:column; gap:4px;"><span class="info-label">Notas</span><span style="font-size:0.8rem;">{{ $dispatchOrder->notes }}</span></div>
                 @endif
             </div>
         </div>
@@ -108,22 +108,22 @@
             <div class="card-header"><span class="card-title">Timeline</span></div>
             <div class="card-body">
                 <div class="timeline">
-                    <div class="timeline-item"><div class="timeline-dot" style="background:#6b7280;"></div><div><div class="timeline-label">Creado</div><div class="timeline-date">{{ $order->created_at->format('d/m/Y H:i') }}</div></div></div>
-                    @if($order->reserved_at)<div class="timeline-item"><div class="timeline-dot" style="background:#d97706;"></div><div><div class="timeline-label">Stock reservado</div><div class="timeline-date">{{ $order->reserved_at->format('d/m/Y H:i') }}</div></div></div>@endif
-                    @if($order->picking_started_at)<div class="timeline-item"><div class="timeline-dot" style="background:#2563eb;"></div><div><div class="timeline-label">Picking iniciado</div><div class="timeline-date">{{ $order->picking_started_at->format('d/m/Y H:i') }}</div></div></div>@endif
-                    @if($order->picked_at)<div class="timeline-item"><div class="timeline-dot" style="background:#16a34a;"></div><div><div class="timeline-label">Picking completo</div><div class="timeline-date">{{ $order->picked_at->format('d/m/Y H:i') }}</div></div></div>@endif
-                    @if($order->dispatched_at)<div class="timeline-item"><div class="timeline-dot" style="background:#059669;"></div><div><div class="timeline-label">Despachado</div><div class="timeline-date">{{ $order->dispatched_at->format('d/m/Y H:i') }}</div></div></div>@endif
+                    <div class="timeline-item"><div class="timeline-dot" style="background:#6b7280;"></div><div><div class="timeline-label">Creado</div><div class="timeline-date">{{ $dispatchOrder->created_at->format('d/m/Y H:i') }}</div></div></div>
+                    @if($dispatchOrder->reserved_at)<div class="timeline-item"><div class="timeline-dot" style="background:#d97706;"></div><div><div class="timeline-label">Stock reservado</div><div class="timeline-date">{{ $dispatchOrder->reserved_at->format('d/m/Y H:i') }}</div></div></div>@endif
+                    @if($dispatchOrder->picking_started_at)<div class="timeline-item"><div class="timeline-dot" style="background:#2563eb;"></div><div><div class="timeline-label">Picking iniciado</div><div class="timeline-date">{{ $dispatchOrder->picking_started_at->format('d/m/Y H:i') }}</div></div></div>@endif
+                    @if($dispatchOrder->picked_at)<div class="timeline-item"><div class="timeline-dot" style="background:#16a34a;"></div><div><div class="timeline-label">Picking completo</div><div class="timeline-date">{{ $dispatchOrder->picked_at->format('d/m/Y H:i') }}</div></div></div>@endif
+                    @if($dispatchOrder->dispatched_at)<div class="timeline-item"><div class="timeline-dot" style="background:#059669;"></div><div><div class="timeline-label">Despachado</div><div class="timeline-date">{{ $dispatchOrder->dispatched_at->format('d/m/Y H:i') }}</div></div></div>@endif
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="card-header"><span class="card-title">Productos ({{ $order->lines->count() }} líneas)</span></div>
+        <div class="card-header"><span class="card-title">Productos ({{ $dispatchOrder->lines->count() }} líneas)</span></div>
         <table class="lines-table">
             <thead><tr><th>Producto</th><th>Lote</th><th>Caducidad</th><th>Solicitado</th><th>Recogido</th><th>Estado</th></tr></thead>
             <tbody>
-            @foreach($order->lines as $line)
+            @foreach($dispatchOrder->lines as $line)
                 <tr>
                     <td><div style="font-weight:600;">{{ $line->product?->name }}</div><div style="font-size:0.7rem; color:var(--text-light);">{{ $line->product?->sku }}</div></td>
                     <td style="font-size:0.78rem;">{{ $line->lot?->lot_number ?? '—' }}</td>

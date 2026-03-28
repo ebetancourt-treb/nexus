@@ -33,6 +33,7 @@ class DispatchOrderController extends Controller
         }
         if ($status = $request->input('status')) { $query->where('status', $status); }
         $orders = $query->latest()->paginate(25)->withQueryString();
+        
         return view('tenant.dispatch-orders.index', compact('orders'));
     }
 
@@ -50,13 +51,17 @@ class DispatchOrderController extends Controller
             'customer_reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
-        $order = new DispatchOrder($request->only('warehouse_id', 'customer_name', 'customer_reference', 'notes'));
-        $order->created_by = auth()->id();
-        $order->tenant_id = auth()->user()->tenant_id;
-        $order->status = 'draft';
-        $order->order_number = $order->generateOrderNumber();
-        $order->save();
-        return redirect()->route('tenant.dispatch-orders.select-lots', $order)->with('success', 'Orden creada. Selecciona los productos y lotes.');
+        
+        $dispatchOrder = new DispatchOrder($request->only('warehouse_id', 'customer_name', 'customer_reference', 'notes'));
+        $dispatchOrder->created_by = auth()->id();
+        $dispatchOrder->tenant_id = auth()->user()->tenant_id;
+        $dispatchOrder->status = 'draft';
+        $dispatchOrder->order_number = $dispatchOrder->generateOrderNumber();
+        $dispatchOrder->save();
+        
+        // Redirección explícita blindada
+        return redirect()->route('tenant.dispatch-orders.select-lots', ['dispatch_order' => $dispatchOrder->id])
+                         ->with('success', 'Orden creada. Selecciona los productos y lotes.');
     }
 
     public function selectLots(DispatchOrder $dispatchOrder): View
@@ -64,6 +69,7 @@ class DispatchOrderController extends Controller
         if (!in_array($dispatchOrder->status, ['draft', 'reserved'])) {
             return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $dispatchOrder->id]);
         }
+        
         $dispatchOrder->load('lines.product', 'lines.lot');
         $products = Product::where('is_active', true)->orderBy('name')->get();
 
@@ -78,7 +84,7 @@ class DispatchOrderController extends Controller
         return view('tenant.dispatch-orders.select-lots', compact('dispatchOrder', 'products', 'stockByProduct'));
     }
 
-    public function addLine(Request $request, DispatchOrder $order): RedirectResponse
+    public function addLine(Request $request, DispatchOrder $dispatchOrder): RedirectResponse
     {
         $request->validate([
             'product_id' => ['required', 'exists:products,id'],
@@ -90,9 +96,14 @@ class DispatchOrderController extends Controller
 
         $stockQuery = StockLevel::where('tenant_id', auth()->user()->tenant_id)
             ->where('product_id', $request->product_id)
-            ->where('warehouse_id', $order->warehouse_id);
-        if ($request->lot_id) { $stockQuery->where('lot_id', $request->lot_id); }
-        else { $stockQuery->whereNull('lot_id'); }
+            ->where('warehouse_id', $dispatchOrder->warehouse_id);
+            
+        if ($request->lot_id) { 
+            $stockQuery->where('lot_id', $request->lot_id); 
+        } else { 
+            $stockQuery->whereNull('lot_id'); 
+        }
+        
         $stock = $stockQuery->first();
 
         if (!$stock || $stock->qty_available < $request->quantity) {
@@ -108,26 +119,29 @@ class DispatchOrderController extends Controller
                     ->where('id', '!=', $request->lot_id)
                     ->whereNotNull('expires_at')
                     ->where('expires_at', '<', $selectedLot->expires_at)
-                    ->whereHas('stockLevels', fn ($q) => $q->where('warehouse_id', $order->warehouse_id)->where('qty_available', '>', 0))
+                    ->whereHas('stockLevels', fn ($q) => $q->where('warehouse_id', $dispatchOrder->warehouse_id)->where('qty_available', '>', 0))
                     ->orderBy('expires_at')->first();
+                    
                 if ($closerLot) {
                     $fefoWarning = "Atención: existe el lote {$closerLot->lot_number} con caducidad más próxima ({$closerLot->expires_at->format('d/m/Y')}) que el seleccionado ({$selectedLot->expires_at->format('d/m/Y')}).";
                 }
             }
         }
 
-        DB::transaction(function () use ($request, $order, $stock) {
+        DB::transaction(function () use ($request, $dispatchOrder, $stock) {
             DispatchOrderLine::create([
-                'dispatch_order_id' => $order->id,
+                'dispatch_order_id' => $dispatchOrder->id,
                 'product_id' => $request->product_id,
                 'lot_id' => $request->lot_id,
                 'quantity_requested' => $request->quantity,
             ]);
+            
             $stock->qty_reserved += $request->quantity;
             $stock->recalculate();
             $stock->save();
-            if ($order->status === 'draft') {
-                $order->update(['status' => 'reserved', 'reserved_at' => now()]);
+            
+            if ($dispatchOrder->status === 'draft') {
+                $dispatchOrder->update(['status' => 'reserved', 'reserved_at' => now()]);
             }
         });
 
@@ -136,109 +150,136 @@ class DispatchOrderController extends Controller
         return back()->with('success', $msg);
     }
 
-    public function removeLine(DispatchOrder $order, DispatchOrderLine $line): RedirectResponse
+    public function removeLine(DispatchOrder $dispatchOrder, DispatchOrderLine $line): RedirectResponse
     {
-        if ($order->status === 'dispatched') { return back()->withErrors(['error' => 'Orden ya despachada.']); }
+        if ($dispatchOrder->status === 'dispatched') { 
+            return back()->withErrors(['error' => 'Orden ya despachada.']); 
+        }
 
-        DB::transaction(function () use ($order, $line) {
+        DB::transaction(function () use ($dispatchOrder, $line) {
             $stock = StockLevel::where('product_id', $line->product_id)
-                ->where('warehouse_id', $order->warehouse_id)
+                ->where('warehouse_id', $dispatchOrder->warehouse_id)
                 ->where('lot_id', $line->lot_id)->first();
+                
             if ($stock) {
                 $stock->qty_reserved = max(0, $stock->qty_reserved - $line->quantity_requested);
                 $stock->recalculate();
                 $stock->save();
             }
+            
             $line->delete();
-            if ($order->lines()->count() === 0) {
-                $order->update(['status' => 'draft', 'reserved_at' => null]);
+            
+            if ($dispatchOrder->lines()->count() === 0) {
+                $dispatchOrder->update(['status' => 'draft', 'reserved_at' => null]);
             }
         });
+        
         return back()->with('success', 'Línea eliminada y stock liberado.');
     }
 
-    public function startPicking(DispatchOrder $order): RedirectResponse
+    public function startPicking(DispatchOrder $dispatchOrder): RedirectResponse
     {
-        if ($order->lines->isEmpty()) { return back()->withErrors(['error' => 'Agrega productos primero.']); }
-        $order->update(['status' => 'picking', 'picking_started_at' => now()]);
-        return redirect()->route('tenant.dispatch-orders.picking', $order)->with('success', 'Picking iniciado.');
+        if ($dispatchOrder->lines->isEmpty()) { 
+            return back()->withErrors(['error' => 'Agrega productos primero.']); 
+        }
+        
+        $dispatchOrder->update(['status' => 'picking', 'picking_started_at' => now()]);
+        return redirect()->route('tenant.dispatch-orders.picking', ['dispatch_order' => $dispatchOrder->id])->with('success', 'Picking iniciado.');
     }
 
-    public function picking(DispatchOrder $order): View
+    public function picking(DispatchOrder $dispatchOrder): View
     {
-        $order->load('lines.product', 'lines.lot', 'warehouse');
-        return view('tenant.dispatch-orders.picking', compact('order'));
+        $dispatchOrder->load('lines.product', 'lines.lot', 'warehouse');
+        return view('tenant.dispatch-orders.picking', compact('dispatchOrder'));
     }
 
-    public function markPicked(Request $request, DispatchOrder $order, DispatchOrderLine $line): RedirectResponse
+    public function markPicked(Request $request, DispatchOrder $dispatchOrder, DispatchOrderLine $line): RedirectResponse
     {
         $request->validate(['quantity_picked' => ['required', 'numeric', 'min:0', 'max:' . $line->quantity_requested]]);
         $line->update(['quantity_picked' => $request->quantity_picked, 'is_picked' => true]);
 
-        $order->load('lines');
-        if ($order->isFullyPicked()) {
-            $order->update(['status' => 'picked', 'picked_at' => now()]);
-            return redirect()->route('tenant.dispatch-orders.show', $order)->with('success', 'Picking completo. Listo para despachar.');
+        $dispatchOrder->load('lines');
+        if ($dispatchOrder->isFullyPicked()) {
+            $dispatchOrder->update(['status' => 'picked', 'picked_at' => now()]);
+            return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $dispatchOrder->id])->with('success', 'Picking completo. Listo para despachar.');
         }
+        
         return back()->with('success', 'Línea confirmada.');
     }
 
-    public function dispatch(DispatchOrder $order): RedirectResponse
+    public function dispatch(DispatchOrder $dispatchOrder): RedirectResponse
     {
-        if ($order->status !== 'picked') { return back()->withErrors(['error' => 'Completa el picking primero.']); }
+        if ($dispatchOrder->status !== 'picked') { 
+            return back()->withErrors(['error' => 'Completa el picking primero.']); 
+        }
 
         try {
-            DB::transaction(function () use ($order) {
+            DB::transaction(function () use ($dispatchOrder) {
                 $movement = Movement::create([
-                    'warehouse_id' => $order->warehouse_id, 'user_id' => auth()->id(),
-                    'type' => 'dispatch', 'reference' => $order->order_number,
-                    'notes' => "Despacho a {$order->customer_name}", 'status' => 'draft',
+                    'warehouse_id' => $dispatchOrder->warehouse_id, 
+                    'user_id' => auth()->id(),
+                    'type' => 'dispatch', 
+                    'reference' => $dispatchOrder->order_number,
+                    'notes' => "Despacho a {$dispatchOrder->customer_name}", 
+                    'status' => 'draft',
                 ]);
-                foreach ($order->lines as $line) {
+                
+                foreach ($dispatchOrder->lines as $line) {
                     MovementLine::create([
-                        'movement_id' => $movement->id, 'product_id' => $line->product_id,
-                        'lot_id' => $line->lot_id, 'quantity' => $line->quantity_picked,
+                        'movement_id' => $movement->id, 
+                        'product_id' => $line->product_id,
+                        'lot_id' => $line->lot_id, 
+                        'quantity' => $line->quantity_picked,
                     ]);
+                    
                     $stock = StockLevel::where('product_id', $line->product_id)
-                        ->where('warehouse_id', $order->warehouse_id)
+                        ->where('warehouse_id', $dispatchOrder->warehouse_id)
                         ->where('lot_id', $line->lot_id)->first();
+                        
                     if ($stock) {
                         $stock->qty_reserved = max(0, $stock->qty_reserved - $line->quantity_requested);
                         $stock->save();
                     }
                 }
+                
                 $movement->load('lines.product');
                 $this->stockService->confirmMovement($movement);
-                $order->update(['status' => 'dispatched', 'confirmed_by' => auth()->id(), 'dispatched_at' => now()]);
+                $dispatchOrder->update(['status' => 'dispatched', 'confirmed_by' => auth()->id(), 'dispatched_at' => now()]);
             });
-            return redirect()->route('tenant.dispatch-orders.show', $order)->with('success', 'Despachado correctamente.');
+            
+            return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $dispatchOrder->id])->with('success', 'Despachado correctamente.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error: ' . $e->getMessage()]);
         }
     }
 
-    public function show(DispatchOrder $order): View
+    public function show(DispatchOrder $dispatchOrder): View
     {
-        $order->load(['warehouse', 'createdBy', 'confirmedBy', 'lines.product', 'lines.lot']);
-        return view('tenant.dispatch-orders.show', compact('order'));
+        $dispatchOrder->load(['warehouse', 'createdBy', 'confirmedBy', 'lines.product', 'lines.lot']);
+        return view('tenant.dispatch-orders.show', compact('dispatchOrder'));
     }
 
-    public function cancel(DispatchOrder $order): RedirectResponse
+    public function cancel(DispatchOrder $dispatchOrder): RedirectResponse
     {
-        if ($order->status === 'dispatched') { return back()->withErrors(['error' => 'No se puede cancelar una orden despachada.']); }
-        DB::transaction(function () use ($order) {
-            foreach ($order->lines as $line) {
+        if ($dispatchOrder->status === 'dispatched') { 
+            return back()->withErrors(['error' => 'No se puede cancelar una orden despachada.']); 
+        }
+        
+        DB::transaction(function () use ($dispatchOrder) {
+            foreach ($dispatchOrder->lines as $line) {
                 $stock = StockLevel::where('product_id', $line->product_id)
-                    ->where('warehouse_id', $order->warehouse_id)
+                    ->where('warehouse_id', $dispatchOrder->warehouse_id)
                     ->where('lot_id', $line->lot_id)->first();
+                    
                 if ($stock) {
                     $stock->qty_reserved = max(0, $stock->qty_reserved - $line->quantity_requested);
                     $stock->recalculate();
                     $stock->save();
                 }
             }
-            $order->update(['status' => 'canceled']);
+            $dispatchOrder->update(['status' => 'canceled']);
         });
+        
         return redirect()->route('tenant.dispatch-orders.index')->with('success', 'Orden cancelada.');
     }
 }

@@ -1,5 +1,5 @@
 <x-tenant-layout>
-    <x-slot:title>Picking — {{ $order->order_number }}</x-slot:title>
+    <x-slot:title>Picking — {{ $dispatchOrder->order_number }}</x-slot:title>
     <x-slot:header>Picking</x-slot:header>
 
     @push('styles')
@@ -51,17 +51,17 @@
 
     <div class="order-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
-            <div class="order-title">Picking — {{ $order->order_number }}</div>
-            <div class="order-meta">Cliente: {{ $order->customer_name }} · {{ $order->warehouse?->name }}</div>
+            <div class="order-title">Picking — {{ $dispatchOrder->order_number }}</div>
+            <div class="order-meta">Cliente: {{ $dispatchOrder->customer_name }} · {{ $dispatchOrder->warehouse?->name }}</div>
         </div>
-        <a href="{{ route('tenant.dispatch-orders.picking-pdf', $order) }}" target="_blank" class="btn-print">Imprimir lista de picking</a>
+        <a href="{{ route('tenant.dispatch-orders.picking-pdf', $dispatchOrder) }}" target="_blank" class="btn-print">Imprimir lista de picking</a>
     </div>
 
     <div class="card">
         <div class="card-header">
             <span class="card-title">Recoge los siguientes productos del anaquel</span>
         </div>
-        @foreach($order->lines as $line)
+        @foreach($dispatchOrder->lines as $line)
             <div class="pick-item {{ $line->is_picked ? 'done' : '' }}">
                 <div class="pick-info">
                     <div class="pick-product">{{ $line->product?->name }}</div>
@@ -77,7 +77,7 @@
                     @if($line->is_picked)
                         <span class="badge badge-green">Recogido: {{ number_format($line->quantity_picked) }}</span>
                     @else
-                        <form action="{{ route('tenant.dispatch-orders.mark-picked', [$order, $line]) }}" method="POST" style="display:flex; gap:6px; align-items:center;">
+                        <form action="{{ route('tenant.dispatch-orders.mark-picked', [$dispatchOrder, $line]) }}" method="POST" style="display:flex; gap:6px; align-items:center;">
                             @csrf @method('PATCH')
                             <input type="number" name="quantity_picked" class="pick-input" value="{{ $line->quantity_requested }}" min="0" max="{{ $line->quantity_requested }}" step="1">
                             <button type="submit" class="btn-pick">Confirmar</button>
