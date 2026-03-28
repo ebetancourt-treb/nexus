@@ -62,13 +62,13 @@ class DispatchOrderController extends Controller
     public function selectLots(DispatchOrder $dispatchOrder): View
     {
         if (!in_array($order->status, ['draft', 'reserved'])) {
-            return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $order->id]);
+            return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $dispatchOrder->id]);
         }
         $order->load('lines.product', 'lines.lot');
         $products = Product::where('is_active', true)->orderBy('name')->get();
 
         // Stock por lote en este almacén
-        $stockByProduct = StockLevel::where('warehouse_id', $order->warehouse_id)
+        $stockByProduct = StockLevel::where('warehouse_id', $dispatchOrder->warehouse_id)
             ->where('qty_available', '>', 0)
             ->with(['product', 'lot'])
             ->orderBy('product_id')
