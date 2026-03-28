@@ -59,7 +59,7 @@ class DispatchOrderController extends Controller
         return redirect()->route('tenant.dispatch-orders.select-lots', $order)->with('success', 'Orden creada. Selecciona los productos y lotes.');
     }
 
-    public function selectLots(DispatchOrder $order): View
+    public function selectLots(DispatchOrder $dispatchOrder): View
     {
         if (!in_array($order->status, ['draft', 'reserved'])) {
             return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $order->id]);
