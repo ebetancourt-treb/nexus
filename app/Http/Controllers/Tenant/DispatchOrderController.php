@@ -64,7 +64,7 @@ class DispatchOrderController extends Controller
         if (!in_array($dispatchOrder->status, ['draft', 'reserved'])) {
             return redirect()->route('tenant.dispatch-orders.show', ['dispatch_order' => $dispatchOrder->id]);
         }
-        $order->load('lines.product', 'lines.lot');
+        $dispatchOrder->load('lines.product', 'lines.lot');
         $products = Product::where('is_active', true)->orderBy('name')->get();
 
         // Stock por lote en este almacén
@@ -75,7 +75,7 @@ class DispatchOrderController extends Controller
             ->get()
             ->groupBy('product_id');
 
-        return view('tenant.dispatch-orders.select-lots', compact('order', 'products', 'stockByProduct'));
+        return view('tenant.dispatch-orders.select-lots', compact('dispatchOrder', 'products', 'stockByProduct'));
     }
 
     public function addLine(Request $request, DispatchOrder $order): RedirectResponse
