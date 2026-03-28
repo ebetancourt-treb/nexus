@@ -44,6 +44,10 @@
             <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
             Despacho
         </a>
+        <a href="{{ route('tenant.dispatch-orders.index') }}" class="sidebar-link {{ request()->routeIs('tenant.dispatch-orders.*') ? 'active' : '' }}">
+            <svg class="sidebar-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-1.5c0-1.036-.84-1.875-1.875-1.875h-.739L15.474 6.525A2.25 2.25 0 0013.476 5.25H8.25"/></svg>
+            Órdenes de despacho
+        </a>
     </div>
 
     @php
