@@ -181,29 +181,97 @@
             linesEmpty.style.display = 'none';
             submitBtn.disabled = false;
 
+            const showSerials = product.track_serials;
+            const warehouseId = document.querySelector('[name="warehouse_id"]').value;
+
+            const serialHtml = showSerials ? `
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div class="line-label" style="margin:0;">Números de serie a despachar (uno por línea) *</div>
+                        <button type="button" class="btn-table" style="font-size:0.62rem; padding:3px 8px;" onclick="loadAvailableSerials(this, ${product.id}, ${warehouseId})">Ver disponibles</button>
+                    </div>
+                    <textarea name="lines[${lineIndex}][serials]" class="line-input serial-input" rows="4"
+                        placeholder="Escanea cada serial que sale del almacén&#10;Ej:&#10;SN-00001&#10;SN-00002"
+                        style="resize:vertical; min-height:80px; font-family:monospace; font-size:0.78rem; line-height:1.6;"
+                        oninput="updateSerialCountDispatch(this)"></textarea>
+                    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                        <span style="font-size:0.65rem; color:var(--text-light);">Escanea o escribe los seriales que salen</span>
+                        <span class="serial-counter" style="font-size:0.68rem; font-weight:600; color:#dc2626;">0 seriales</span>
+                    </div>
+                    <div class="available-serials" style="display:none; margin-top:8px; padding:8px; background:#fafafa; border:1px solid var(--border); border-radius:6px; max-height:120px; overflow-y:auto; font-size:0.72rem; font-family:monospace;"></div>
+                </div>` : '';
+
             const html = `
                 <div class="line-card" data-index="${lineIndex}">
                     <input type="hidden" name="lines[${lineIndex}][product_id]" value="${product.id}">
                     <div class="line-header">
                         <div>
                             <div class="line-product-name">${product.name}</div>
-                            <div class="line-product-sku">SKU: ${product.sku} ${product.barcode ? '· ' + product.barcode : ''} · ${product.unit_of_measure}</div>
+                            <div class="line-product-sku">SKU: ${product.sku} ${product.barcode ? '· ' + product.barcode : ''} · ${product.unit_of_measure}${showSerials ? ' · Series' : ''}</div>
                         </div>
                         <button type="button" class="btn-remove" onclick="removeLine(this)">&times;</button>
                     </div>
                     <div class="line-grid">
                         <div>
                             <div class="line-label">Cantidad a despachar *</div>
-                            <input type="number" name="lines[${lineIndex}][quantity]" class="line-input" required min="0.01" step="0.01" placeholder="0">
+                            <input type="number" name="lines[${lineIndex}][quantity]" class="line-input qty-input" required min="1" step="1" placeholder="0" ${showSerials ? 'readonly style="background:#f9fafb;"' : ''}>
+                            ${showSerials ? '<span style="font-size:0.62rem; color:var(--text-light);">Se calcula por seriales</span>' : ''}
                         </div>
                     </div>
+                    ${serialHtml}
                 </div>`;
 
             linesContainer.insertAdjacentHTML('beforeend', html);
             lineIndex++;
 
-            const lastQtyInput = linesContainer.querySelector('.line-card:last-child input[type="number"]');
-            if (lastQtyInput) lastQtyInput.focus();
+            const lastCard = linesContainer.querySelector('.line-card:last-child');
+            if (showSerials) {
+                const serialInput = lastCard.querySelector('.serial-input');
+                if (serialInput) serialInput.focus();
+            } else {
+                const qtyInput = lastCard.querySelector('.qty-input');
+                if (qtyInput) qtyInput.focus();
+            }
+        }
+
+        function updateSerialCountDispatch(textarea) {
+            const card = textarea.closest('.line-card');
+            const lines = textarea.value.split('\n').filter(l => l.trim() !== '');
+            const counter = card.querySelector('.serial-counter');
+            const qtyInput = card.querySelector('.qty-input');
+
+            if (counter) counter.textContent = lines.length + ' serial' + (lines.length !== 1 ? 'es' : '');
+            if (qtyInput) qtyInput.value = lines.length || '';
+        }
+
+        async function loadAvailableSerials(btn, productId, warehouseId) {
+            const card = btn.closest('.line-card');
+            const container = card.querySelector('.available-serials');
+            try {
+                const res = await fetch(`/app/api/products/${productId}/serials?warehouse_id=${warehouseId}`, {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                });
+                const serials = await res.json();
+                if (serials.length === 0) {
+                    container.innerHTML = '<span style="color:var(--text-light);">No hay seriales disponibles para este producto en este almacén.</span>';
+                } else {
+                    container.innerHTML = '<div style="margin-bottom:4px; font-weight:600; color:var(--text-secondary);">' + serials.length + ' disponibles:</div>' +
+                        serials.map(s => `<div style="padding:2px 0; cursor:pointer; color:var(--jade);" onclick="addSerialToDispatch(this, '${s}')" title="Click para agregar">${s}</div>`).join('');
+                }
+                container.style.display = 'block';
+            } catch (err) { console.error(err); }
+        }
+
+        function addSerialToDispatch(el, serial) {
+            const card = el.closest('.line-card');
+            const textarea = card.querySelector('.serial-input');
+            const current = textarea.value.trim();
+            // No duplicar
+            if (current.split('\n').map(s => s.trim()).includes(serial)) return;
+            textarea.value = current ? current + '\n' + serial : serial;
+            updateSerialCountDispatch(textarea);
+            el.style.opacity = '0.3';
+            el.style.pointerEvents = 'none';
         }
 
         function removeLine(btn) {

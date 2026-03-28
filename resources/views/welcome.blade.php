@@ -151,19 +151,6 @@
         .price-btn-primary:hover { background: var(--jade-dark); }
         .price-btn-outline { background: transparent; color: var(--jade); border: 1.5px solid var(--jade); }
         .price-btn-outline:hover { background: var(--jade-50); }
-        .price-card.coming-soon { opacity: 0.7; }
-        .price-card.coming-soon:hover { opacity: 0.85; }
-        .coming-soon-badge {
-            display: inline-block; padding: 4px 12px; background: #f3f4f6; color: #6b7280;
-            border-radius: 50px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.05em; margin-bottom: 12px;
-        }
-        .price-btn-disabled {
-            display: block; width: 100%; padding: 12px; text-align: center;
-            border-radius: 10px; font-size: 0.82rem; font-weight: 600;
-            font-family: inherit; cursor: default; background: #f3f4f6; color: #9ca3af;
-            border: none;
-        }
 
         /* ─── FAQ ─── */
         .faq { padding: 80px 24px; background: var(--bg); }
@@ -280,7 +267,7 @@
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg></div>
-                <h3>PEPS automático (Primeras Entradas, Primeras Salidas)</h3>
+                <h3>FIFO / FEFO automático</h3>
                 <p>Configura la estrategia de rotación por almacén: primero en entrar, primero en salir; o primero en expirar.</p>
             </div>
             <div class="feature-card">
@@ -310,11 +297,10 @@
     <div class="section-inner">
         <div class="section-label">Precios</div>
         <h2 class="section-title">Un plan para cada etapa</h2>
-        <p class="section-subtitle">Empieza con el plan Starter — 7 días gratis, sin tarjeta de crédito. Más planes disponibles pronto.</p>
+        <p class="section-subtitle">Todos los planes incluyen 7 días de prueba gratis. Sin tarjeta de crédito.</p>
 
         <div class="pricing-grid">
-            <div class="price-card popular">
-                <div class="price-badge">Disponible ahora</div>
+            <div class="price-card">
                 <div class="price-name">Starter</div>
                 <div class="price-amount">$349 <span>MXN/mes</span></div>
                 <p class="price-desc">Para negocios que inician su gestión de almacén digital.</p>
@@ -322,16 +308,16 @@
                     <li>1 almacén</li>
                     <li>Hasta 1,000 productos</li>
                     <li>3 usuarios</li>
-                    <li>Procesos estándar</li>
+                    <li>Recepción y despacho estándar</li>
                     <li>Scanner / código de barras</li>
                     <li>Dashboard con alertas</li>
                     <li>Soporte por correo</li>
                 </ul>
-                <a href="{{ route('register') }}" class="price-btn price-btn-primary">Empezar gratis — 7 días</a>
+                <a href="{{ route('register', ['plan' => 'starter']) }}" class="price-btn price-btn-outline">Empezar gratis</a>
             </div>
 
-            <div class="price-card coming-soon">
-                <span class="coming-soon-badge">Próximamente</span>
+            <div class="price-card popular">
+                <div class="price-badge">Más popular</div>
                 <div class="price-name">Profesional</div>
                 <div class="price-amount">$899 <span>MXN/mes</span></div>
                 <p class="price-desc">Para operaciones que necesitan flexibilidad en sus procesos.</p>
@@ -339,16 +325,16 @@
                     <li>Hasta 3 almacenes</li>
                     <li>Productos ilimitados</li>
                     <li>10 usuarios</li>
-                    <li>Flujos de proceso configurables</li>
+                    <li>Control por lotes y series</li>
                     <li>Recepción multi-lote</li>
                     <li>FIFO / FEFO por almacén</li>
+                    <li>Proveedores y órdenes de compra</li>
                     <li>Soporte prioritario</li>
                 </ul>
-                <span class="price-btn-disabled">Disponible pronto</span>
+                <a href="{{ route('register', ['plan' => 'profesional']) }}" class="price-btn price-btn-primary">Empezar gratis — 7 días</a>
             </div>
 
-            <div class="price-card coming-soon">
-                <span class="coming-soon-badge">Próximamente</span>
+            <div class="price-card">
                 <div class="price-name">Enterprise</div>
                 <div class="price-amount">$2,499 <span>MXN/mes</span></div>
                 <p class="price-desc">Para empresas con operaciones complejas y múltiples ubicaciones.</p>
@@ -356,12 +342,13 @@
                     <li>Almacenes ilimitados</li>
                     <li>Productos ilimitados</li>
                     <li>Usuarios ilimitados</li>
-                    <li>Procesos 100% a la medida</li>
+                    <li>Todo lo del Profesional</li>
+                    <li>Conteos cíclicos y pick lists</li>
                     <li>API para integraciones</li>
                     <li>Consultoría de implementación</li>
                     <li>Soporte dedicado + SLA</li>
                 </ul>
-                <span class="price-btn-disabled">Disponible pronto</span>
+                <a href="{{ route('register', ['plan' => 'enterprise']) }}" class="price-btn price-btn-outline">Empezar gratis</a>
             </div>
         </div>
     </div>

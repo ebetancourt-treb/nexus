@@ -204,6 +204,8 @@
             submitBtn.disabled = false;
 
             const showLots = product.track_lots;
+            const showSerials = product.track_serials;
+
             const lotHtml = showLots ? `
                 <div class="line-grid-lot">
                     <div>
@@ -216,20 +218,43 @@
                     </div>
                 </div>` : '';
 
+            const serialHtml = showSerials ? `
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb;">
+                    <div class="line-label" style="margin-bottom:6px;">Números de serie (uno por línea) *</div>
+                    <div style="display:flex; gap:8px; align-items:flex-start;">
+                        <div style="flex:1;">
+                            <textarea name="lines[${lineIndex}][serials]" class="line-input serial-input" rows="4"
+                                placeholder="Escanea o escribe cada serial y presiona Enter&#10;Ej:&#10;SN-00001&#10;SN-00002&#10;SN-00003"
+                                style="resize:vertical; min-height:80px; font-family:monospace; font-size:0.78rem; line-height:1.6;"
+                                oninput="updateSerialCount(this)"></textarea>
+                            <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                                <span style="font-size:0.65rem; color:var(--text-light);">Tip: el scanner agrega uno por línea automáticamente</span>
+                                <span class="serial-counter" style="font-size:0.68rem; font-weight:600; color:var(--jade);">0 seriales</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>` : '';
+
+            const trackingLabels = [
+                showLots ? 'Lotes' : '',
+                showSerials ? 'Series' : ''
+            ].filter(Boolean).join(' + ');
+
             const html = `
                 <div class="line-card" data-index="${lineIndex}">
                     <input type="hidden" name="lines[${lineIndex}][product_id]" value="${product.id}">
                     <div class="line-header">
                         <div>
                             <div class="line-product-name">${product.name}</div>
-                            <div class="line-product-sku">SKU: ${product.sku} ${product.barcode ? '· ' + product.barcode : ''} · ${product.unit_of_measure}${showLots ? ' · Control por lotes' : ''}</div>
+                            <div class="line-product-sku">SKU: ${product.sku} ${product.barcode ? '· ' + product.barcode : ''} · ${product.unit_of_measure}${trackingLabels ? ' · ' + trackingLabels : ''}</div>
                         </div>
                         <button type="button" class="btn-remove" onclick="removeLine(this)">&times;</button>
                     </div>
                     <div class="line-grid">
                         <div>
                             <div class="line-label">Cantidad *</div>
-                            <input type="number" name="lines[${lineIndex}][quantity]" class="line-input" required min="0.01" step="0.01" placeholder="0" autofocus>
+                            <input type="number" name="lines[${lineIndex}][quantity]" class="line-input qty-input" required min="1" step="1" placeholder="0" ${showSerials ? 'readonly style="background:#f9fafb;"' : ''}>
+                            ${showSerials ? '<span style="font-size:0.62rem; color:var(--text-light);">Se calcula por seriales ingresados</span>' : ''}
                         </div>
                         <div>
                             <div class="line-label">Costo unitario</div>
@@ -238,14 +263,31 @@
                         <div></div>
                     </div>
                     ${lotHtml}
+                    ${serialHtml}
                 </div>`;
 
             linesContainer.insertAdjacentHTML('beforeend', html);
             lineIndex++;
 
-            // Focus en el campo de cantidad de la línea recién agregada
-            const lastQtyInput = linesContainer.querySelector('.line-card:last-child input[type="number"]');
-            if (lastQtyInput) lastQtyInput.focus();
+            // Focus: si tiene seriales, focus en el textarea; si no, en cantidad
+            const lastCard = linesContainer.querySelector('.line-card:last-child');
+            if (showSerials) {
+                const serialInput = lastCard.querySelector('.serial-input');
+                if (serialInput) serialInput.focus();
+            } else {
+                const qtyInput = lastCard.querySelector('.qty-input');
+                if (qtyInput) qtyInput.focus();
+            }
+        }
+
+        function updateSerialCount(textarea) {
+            const card = textarea.closest('.line-card');
+            const lines = textarea.value.split('\n').filter(l => l.trim() !== '');
+            const counter = card.querySelector('.serial-counter');
+            const qtyInput = card.querySelector('.qty-input');
+
+            if (counter) counter.textContent = lines.length + ' serial' + (lines.length !== 1 ? 'es' : '');
+            if (qtyInput) qtyInput.value = lines.length || '';
         }
 
         function removeLine(btn) {

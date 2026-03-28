@@ -51,12 +51,14 @@ class TenantService
             $role = Role::findOrCreate('Company Admin', 'web');
             $user->assignRole($role);
 
-            // 4. Crear suscripción trial (plan Starter por default)
-            $starterPlan = Plan::where('slug', 'starter')->firstOrFail();
+            // 4. Crear suscripción trial con el plan elegido
+            $planSlug = $data['plan'] ?? 'profesional';
+            $plan = Plan::where('slug', $planSlug)->first()
+                ?? Plan::where('slug', 'starter')->firstOrFail();
 
             Subscription::create([
                 'tenant_id' => $tenant->id,
-                'plan_id' => $starterPlan->id,
+                'plan_id' => $plan->id,
                 'status' => 'trialing',
                 'trial_ends_at' => now()->addDays(7),
                 'billing_cycle' => 'monthly',

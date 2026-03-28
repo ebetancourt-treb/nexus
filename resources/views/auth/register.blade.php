@@ -2,6 +2,43 @@
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
+        @php
+            $selectedPlan = request('plan', 'profesional');
+            $planInfo = [
+                'starter' => ['name' => 'Starter', 'price' => '$349', 'desc' => '1 almacén · 1,000 productos · 3 usuarios'],
+                'profesional' => ['name' => 'Profesional', 'price' => '$899', 'desc' => '3 almacenes · Productos ilimitados · 10 usuarios · Lotes y series'],
+                'enterprise' => ['name' => 'Enterprise', 'price' => '$2,499', 'desc' => 'Ilimitado · API · Consultoría · Soporte dedicado'],
+            ];
+            $plan = $planInfo[$selectedPlan] ?? $planInfo['profesional'];
+        @endphp
+
+        <!-- Plan seleccionado -->
+        <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-green-800">Plan {{ $plan['name'] }} — {{ $plan['price'] }} MXN/mes</p>
+                    <p class="text-xs text-green-600 mt-1">{{ $plan['desc'] }}</p>
+                </div>
+                <span class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded">7 días gratis</span>
+            </div>
+        </div>
+
+        <input type="hidden" name="plan" value="{{ $selectedPlan }}">
+
+        <!-- Selector de plan (compacto) -->
+        <div class="mb-4">
+            <label class="block font-medium text-sm text-gray-700 mb-2">Cambiar plan</label>
+            <div class="grid grid-cols-3 gap-2">
+                @foreach(['starter' => 'Starter', 'profesional' => 'Profesional', 'enterprise' => 'Enterprise'] as $slug => $name)
+                    <a href="{{ route('register', ['plan' => $slug]) }}"
+                       class="text-center py-2 px-3 rounded-lg text-xs font-semibold border transition-all
+                              {{ $selectedPlan === $slug ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600' }}">
+                        {{ $name }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+
         <!-- Company Name -->
         <div>
             <x-input-label for="company_name" :value="__('Nombre de tu empresa')" />
@@ -37,15 +74,15 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <!-- Trial info -->
-        <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p class="text-sm text-green-800">
-                <span class="font-semibold">7 días gratis</span> — No necesitas tarjeta de crédito. Tu prueba incluye acceso completo al plan Starter.
+        <!-- Terms -->
+        <div class="mt-4">
+            <p class="text-xs text-gray-500">
+                Al crear tu cuenta aceptas los <a href="#" class="underline text-green-600">términos de servicio</a> y la <a href="#" class="underline text-green-600">política de privacidad</a> de BlumOps.
             </p>
         </div>
 
         <div class="flex items-center justify-between mt-6">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
+            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md" href="{{ route('login') }}">
                 {{ __('¿Ya tienes cuenta?') }}
             </a>
 

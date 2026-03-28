@@ -7,6 +7,7 @@ use App\Models\Lot;
 use App\Models\Movement;
 use App\Models\MovementLine;
 use App\Models\Product;
+use App\Models\SerialNumber;
 use App\Models\Warehouse;
 use App\Services\StockService;
 use Illuminate\Http\RedirectResponse;
@@ -73,6 +74,7 @@ class MovementController extends Controller
             'lines.*.unit_cost' => ['nullable', 'numeric', 'min:0'],
             'lines.*.lot_number' => ['nullable', 'string', 'max:50'],
             'lines.*.expires_at' => ['nullable', 'date'],
+            'lines.*.serials' => ['nullable', 'string'], // seriales separados por salto de línea
         ]);
 
         $tenant = auth()->user()->tenant;
@@ -81,6 +83,33 @@ class MovementController extends Controller
         $hasLotData = collect($request->lines)->contains(fn ($line) => !empty($line['lot_number']));
         if ($hasLotData && !$tenant->hasFeature('lots.enabled')) {
             return back()->withErrors(['error' => 'Tu plan no incluye control por lotes. Actualiza tu plan para usar esta funcionalidad.'])->withInput();
+        }
+
+        // Validar si el plan permite seriales
+        $hasSerialData = collect($request->lines)->contains(fn ($line) => !empty($line['serials']));
+        if ($hasSerialData && !$tenant->hasFeature('serials.enabled')) {
+            return back()->withErrors(['error' => 'Tu plan no incluye control por número de serie. Actualiza tu plan.'])->withInput();
+        }
+
+        // Validar que cantidad de seriales coincida con cantidad declarada
+        foreach ($request->lines as $i => $lineData) {
+            if (!empty($lineData['serials'])) {
+                $serials = array_filter(array_map('trim', explode("\n", $lineData['serials'])));
+                $qty = (int) $lineData['quantity'];
+                if (count($serials) !== $qty) {
+                    return back()->withErrors([
+                        'error' => "Línea " . ($i + 1) . ": declaraste {$qty} unidades pero ingresaste " . count($serials) . " números de serie. Deben coincidir."
+                    ])->withInput();
+                }
+
+                // Verificar duplicados dentro de la misma línea
+                $duplicates = array_diff_assoc($serials, array_unique($serials));
+                if (!empty($duplicates)) {
+                    return back()->withErrors([
+                        'error' => "Línea " . ($i + 1) . ": número de serie duplicado: " . implode(', ', array_unique($duplicates))
+                    ])->withInput();
+                }
+            }
         }
 
         try {
@@ -99,8 +128,6 @@ class MovementController extends Controller
 
                     // Si el producto tiene tracking de lotes y se proporcionó número
                     if (!empty($lineData['lot_number'])) {
-                        $product = Product::find($lineData['product_id']);
-
                         $lot = Lot::firstOrCreate(
                             [
                                 'tenant_id' => auth()->user()->tenant_id,
@@ -112,7 +139,6 @@ class MovementController extends Controller
                                 'status' => 'released',
                             ]
                         );
-
                         $lotId = $lot->id;
                     }
 
@@ -123,6 +149,21 @@ class MovementController extends Controller
                         'quantity' => abs($lineData['quantity']),
                         'unit_cost' => $lineData['unit_cost'] ?? 0,
                     ]);
+
+                    // Registrar números de serie
+                    if (!empty($lineData['serials'])) {
+                        $serials = array_filter(array_map('trim', explode("\n", $lineData['serials'])));
+                        foreach ($serials as $serial) {
+                            SerialNumber::create([
+                                'tenant_id' => auth()->user()->tenant_id,
+                                'product_id' => $lineData['product_id'],
+                                'lot_id' => $lotId,
+                                'serial_number' => $serial,
+                                'status' => 'available',
+                                'warehouse_id' => $request->warehouse_id,
+                            ]);
+                        }
+                    }
                 }
 
                 // Confirmar automáticamente
@@ -161,6 +202,7 @@ class MovementController extends Controller
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.product_id' => ['required', 'exists:products,id'],
             'lines.*.quantity' => ['required', 'numeric', 'min:0.01'],
+            'lines.*.serials' => ['nullable', 'string'], // seriales a despachar
         ]);
 
         // Verificar stock antes de crear
@@ -175,6 +217,34 @@ class MovementController extends Controller
                 return back()->withErrors([
                     'error' => "Stock insuficiente para {$product->name}."
                 ])->withInput();
+            }
+
+            // Validar seriales en despacho
+            if (!empty($lineData['serials'])) {
+                $serials = array_filter(array_map('trim', explode("\n", $lineData['serials'])));
+                $qty = (int) $lineData['quantity'];
+                if (count($serials) !== $qty) {
+                    $product = Product::find($lineData['product_id']);
+                    return back()->withErrors([
+                        'error' => "{$product->name}: declaraste {$qty} unidades pero ingresaste " . count($serials) . " seriales."
+                    ])->withInput();
+                }
+
+                // Verificar que los seriales existen y están disponibles
+                foreach ($serials as $serial) {
+                    $exists = SerialNumber::where('product_id', $lineData['product_id'])
+                        ->where('warehouse_id', $request->warehouse_id)
+                        ->where('serial_number', $serial)
+                        ->where('status', 'available')
+                        ->exists();
+
+                    if (!$exists) {
+                        $product = Product::find($lineData['product_id']);
+                        return back()->withErrors([
+                            'error' => "{$product->name}: el serial '{$serial}' no existe o no está disponible en este almacén."
+                        ])->withInput();
+                    }
+                }
             }
         }
 
@@ -195,6 +265,17 @@ class MovementController extends Controller
                         'product_id' => $lineData['product_id'],
                         'quantity' => abs($lineData['quantity']),
                     ]);
+
+                    // Marcar seriales como vendidos
+                    if (!empty($lineData['serials'])) {
+                        $serials = array_filter(array_map('trim', explode("\n", $lineData['serials'])));
+                        foreach ($serials as $serial) {
+                            SerialNumber::where('product_id', $lineData['product_id'])
+                                ->where('warehouse_id', $request->warehouse_id)
+                                ->where('serial_number', $serial)
+                                ->update(['status' => 'sold']);
+                        }
+                    }
                 }
 
                 $movement->load('lines.product');

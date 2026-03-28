@@ -13,18 +13,11 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
         return view('auth.register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     * Crea tenant + user + trial + warehouse en un solo paso.
-     */
     public function store(Request $request, TenantService $tenantService): RedirectResponse
     {
         $request->validate([
@@ -32,6 +25,7 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'company_name' => ['required', 'string', 'max:255'],
+            'plan' => ['nullable', 'string', 'in:starter,profesional,enterprise'],
         ]);
 
         $user = $tenantService->createTenantWithTrial([
@@ -39,6 +33,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => $request->password,
             'company_name' => $request->company_name,
+            'plan' => $request->input('plan', 'profesional'),
         ]);
 
         event(new Registered($user));
