@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Cashier\Billable;
 
 class Tenant extends Model
 {
-    use HasFactory, Auditable;
+    use HasFactory, Auditable, Billable;
 
     protected $fillable = [
         'name',

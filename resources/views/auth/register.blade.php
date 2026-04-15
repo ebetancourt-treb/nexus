@@ -14,30 +14,9 @@
 
         <!-- Plan seleccionado -->
         <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-semibold text-green-800">Plan {{ $plan['name'] }} — {{ $plan['price'] }} MXN/mes</p>
-                    <p class="text-xs text-green-600 mt-1">{{ $plan['desc'] }}</p>
-                </div>
-                <span class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded">7 días gratis</span>
-            </div>
-        </div>
+            <div s
 
-        <input type="hidden" name="plan" value="{{ $selectedPlan }}">
-
-        <!-- Selector de plan (compacto) -->
-        <div class="mb-4">
-            <label class="block font-medium text-sm text-gray-700 mb-2">Cambiar plan</label>
-            <div class="grid grid-cols-3 gap-2">
-                @foreach(['starter' => 'Starter', 'profesional' => 'Profesional', 'enterprise' => 'Enterprise'] as $slug => $name)
-                    <a href="{{ route('register', ['plan' => $slug]) }}"
-                       class="text-center py-2 px-3 rounded-lg text-xs font-semibold border transition-all
-                              {{ $selectedPlan === $slug ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600' }}">
-                        {{ $name }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
+        
 
         <!-- Company Name -->
         <div>

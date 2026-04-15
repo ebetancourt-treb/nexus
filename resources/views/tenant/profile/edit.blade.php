@@ -188,7 +188,7 @@
                 <div class="info-row"><span class="info-label">Usuarios</span><span class="info-value">{{ $plan?->max_users === -1 ? 'Ilimitados' : $plan?->max_users }}</span></div>
 
                 <div style="margin-top: 16px;">
-                    <a href="https://wa.me/528711234567?text=Hola%2C%20quiero%20información%20sobre%20los%20planes%20de%20BlumOps" target="_blank" class="btn-save" style="text-decoration:none; display:inline-block;">Cambiar plan</a>
+                    <a href="{{ route('tenant.billing.plans') }}" class="btn-save" style="text-decoration:none; display:inline-block;">Cambiar plan</a>
                 </div>
             </div>
         </div>

@@ -313,7 +313,7 @@
                     <li>Dashboard con alertas</li>
                     <li>Soporte por correo</li>
                 </ul>
-                <a href="{{ route('register', ['plan' => 'starter']) }}" class="price-btn price-btn-outline">Empezar gratis</a>
+                <a href="{{ route('register', ['plan' => 'starter']) }}" class="price-btn price-btn-outline">Probar gratis</a>
             </div>
 
             <div class="price-card popular">
@@ -348,7 +348,8 @@
                     <li>Consultoría de implementación</li>
                     <li>Soporte dedicado + SLA</li>
                 </ul>
-                <a href="{{ route('register', ['plan' => 'enterprise']) }}" class="price-btn price-btn-outline">Empezar gratis</a>
+                <a href="https://wa.me/528711234567?text=Hola%2C%20me%20interesa%20el%20plan%20Enterprise%20de%20BlumOps" target="_blank" class="price-btn price-btn-outline">Contactar ventas</a>
+
             </div>
         </div>
     </div>

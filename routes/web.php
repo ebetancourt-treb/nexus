@@ -11,9 +11,12 @@ use App\Http\Controllers\Tenant\MovementController;
 use App\Http\Controllers\Tenant\ProductController;
 use App\Http\Controllers\Tenant\ProductSearchController;
 use App\Http\Controllers\Tenant\StockController;
+use App\Http\Controllers\Tenant\StripeController;
 use App\Http\Controllers\Tenant\TenantProfileController;
 use App\Http\Controllers\Tenant\WarehouseController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 
 // ── Landing pública ──
 Route::get('/', function () {
@@ -59,7 +62,8 @@ Route::middleware(['auth'])
     });
 
 // ── Rutas del Tenant (empresa cliente) ──
-Route::middleware(['auth', 'set_warehouse'])
+Route::middleware(['auth', 'verified', 'set_warehouse'])
+
     ->prefix('app')
     ->name('tenant.')
     ->group(function () {
@@ -148,6 +152,24 @@ Route::middleware(['auth', 'set_warehouse'])
         Route::post('dispatch-orders/{dispatch_order}/lines/{line}/pick', [DispatchOrderController::class, 'pickLine'])->name('dispatch-orders.pick-line');
         Route::post('dispatch-orders/{dispatch_order}/confirm', [DispatchOrderController::class, 'confirmDispatch'])->name('dispatch-orders.confirm');
         Route::post('dispatch-orders/{dispatch_order}/cancel', [DispatchOrderController::class, 'cancel'])->name('dispatch-orders.cancel');
+
+        // Billing / Stripe
+        Route::get('billing/plans', [StripeController::class, 'plans'])->name('billing.plans');
+        Route::post('billing/checkout/{plan}', [StripeController::class, 'checkout'])->name('billing.checkout');
+        Route::get('billing/success', [StripeController::class, 'success'])->name('billing.success');
+        Route::get('billing/portal', [StripeController::class, 'portal'])->name('billing.portal');
+        Route::post('billing/change-plan/{plan}', [StripeController::class, 'changePlan'])->name('billing.change-plan');
+        Route::post('billing/cancel', [StripeController::class, 'cancel'])->name('billing.cancel');
+        Route::post('billing/resume', [StripeController::class, 'resume'])->name('billing.resume');
     });
+
+// Webhook de Stripe (sin auth, sin CSRF)
+Route::post('stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])->name('stripe.webhook');
+
+Route::middleware('auth')->group(function () {
+    Route::get('verify-email', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'show'])->name('verification.notice');
+    Route::post('verify-email', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'verify'])->name('verification.verify');
+    Route::post('verify-email/send', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'send'])->name('verification.send');
+});
 
 require __DIR__.'/auth.php';

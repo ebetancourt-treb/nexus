@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\VerificationCodeMail;
+use App\Models\EmailVerificationCode;
 use App\Services\TenantService;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -36,10 +38,17 @@ class RegisteredUserController extends Controller
             'plan' => $request->input('plan', 'profesional'),
         ]);
 
-        event(new Registered($user));
-
+        // NO verificar email automáticamente — enviar código OTP
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        // Generar y enviar código
+        $verification = EmailVerificationCode::generateFor($user);
+
+        Mail::to($user->email)->send(new VerificationCodeMail(
+            code: $verification->code,
+            userName: $user->name,
+        ));
+
+        return redirect()->route('verification.notice');
     }
 }

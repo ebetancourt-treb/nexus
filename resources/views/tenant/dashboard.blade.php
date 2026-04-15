@@ -63,7 +63,6 @@
                 <div class="trial-text">Tu prueba gratuita termina en <span>{{ $trialDaysLeft }} días</span></div>
                 <div class="trial-plan">Plan actual: {{ $plan?->name }}</div>
             </div>
-            <a href="https://wa.me/528711234567?text=Hola%2C%20quiero%20información%20sobre%20los%20planes%20de%20BlumOps" target="_blank" class="btn-plan">Contactar para upgrade</a>
         </div>
     @endif
 

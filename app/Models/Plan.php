@@ -15,6 +15,7 @@ class Plan extends Model
         'slug',
         'price_monthly',
         'price_yearly',
+        'stripe_price_id',
         'max_warehouses',
         'max_skus',
         'max_users',
