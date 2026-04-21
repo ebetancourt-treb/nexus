@@ -45,7 +45,7 @@
             top: 0;
             left: 0;
             width: var(--sidebar-w);
-            height: 100vh;
+            height: 100dvh;
             background: var(--bg-sidebar);
             border-right: 1px solid var(--border);
             display: flex;
@@ -61,6 +61,7 @@
             align-items: center;
             gap: 0;
             text-decoration: none;
+            flex-shrink: 0;
         }
 
         .sidebar-logo-text {
@@ -133,6 +134,7 @@
         .sidebar-footer {
             padding: 12px 16px;
             border-top: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         .sidebar-tenant {
