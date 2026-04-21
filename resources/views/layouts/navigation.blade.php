@@ -327,7 +327,7 @@
         /* ── Dropdown Positioning ─────────────────────────────– */
         .blum-user-dropdown-wrapper {
             position: relative;
-            display: none;
+            display: block;
         }
 
         .blum-user-dropdown-wrapper.active {
@@ -458,7 +458,8 @@
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"
-                            class="blum-mobile-link danger w-full text-left bg-transparent border-0 cursor-pointer p-0 pl-6"
+                            class="blum-mobile-link danger"
+                            style="width: 100%; text-align: left; background: transparent; border: none; cursor: pointer;"
                             @click="open = false">
                         Cerrar sesión
                     </button>
