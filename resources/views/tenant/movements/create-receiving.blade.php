@@ -96,6 +96,12 @@
                     <div class="form-section-label">Agregar productos</div>
                 </div>
 
+                
+
+                <!-- Líneas agregadas -->
+                <div class="lines-container" id="linesContainer">
+                    <div class="lines-empty" id="linesEmpty">Escanea o busca un producto para agregarlo a esta recepción.</div>
+                </div>
                 <!-- Scanner / búsqueda -->
                 <div class="scanner-bar">
                     <div style="flex: 1; position: relative;">
@@ -104,11 +110,6 @@
                         <div class="scanner-hint">El cursor del scanner escribe aquí. También puedes escribir manualmente.</div>
                         <div class="search-results" id="searchResults"></div>
                     </div>
-                </div>
-
-                <!-- Líneas agregadas -->
-                <div class="lines-container" id="linesContainer">
-                    <div class="lines-empty" id="linesEmpty">Escanea o busca un producto para agregarlo a esta recepción.</div>
                 </div>
             </div>
 

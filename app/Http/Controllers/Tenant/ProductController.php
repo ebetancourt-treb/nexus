@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Services\OdooService;
+use Illuminate\Support\Facades\Log;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +15,39 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
+    protected $odoo;
+    public function __construct(OdooService $odoo)
+    {
+        $this->odoo = $odoo;
+    }
+
+    public function odooIndex(Request $request): View
+    {
+        $odooProducts = [];
+        $error = null;
+
+        try {
+            // Hacemos la consulta en tiempo real al ERP
+            $odooProducts = $this->odoo->executeKw(
+                'product.template',
+                'search_read',
+                [
+                    [] // Filtro vacío = traer todos
+                ],
+                [
+                    'fields' => ['name', 'qty_available', 'list_price', 'barcode', 'default_code'],
+                    'limit' => 50 // Limitamos a 50 para que la demo cargue rapidísimo
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::error('Error conectando a Odoo en demo: ' . $e->getMessage());
+            $error = 'No se pudo establecer conexión con el ERP en este momento.';
+        }
+
+        return view('tenant.products.odoo_index', compact('odooProducts', 'error'));
+    }
+
+
     public function index(Request $request): View
     {
         $query = Product::with('category')
@@ -162,5 +197,34 @@ class ProductController extends Controller
 
         return redirect()->route('tenant.products.index')
             ->with('success', 'Producto eliminado correctamente.');
+    }
+
+    public function simularCreacionOdoo(Request $request): RedirectResponse
+    {
+        try {
+            
+            $random = rand(100, 999); 
+
+            $nuevoProductoId = $this->odoo->executeKw(
+                'product.template',
+                'create',
+                [
+                    [ 
+                        'name' => 'Producto de Prueba desde Treblum ' . $random,
+                        'is_storable' => true,
+                        'list_price' => 150.00,
+                        'standard_price' => 100.00,
+                        'default_code' => 'DEMO-TB-' . $random,
+                        'barcode' => '750123456' . $random,
+                    ]
+                ]
+            );
+
+            return back()->with('success', '¡Magia! Producto creado en Odoo exitosamente. El ID en el ERP es: ' . $nuevoProductoId);
+            
+        } catch (\Exception $e) {
+            Log::error('Error creando en Odoo: ' . $e->getMessage());
+            return back()->withErrors(['odoo' => 'Error al comunicar con Odoo: Revisa los logs.']);
+        }
     }
 }

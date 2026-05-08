@@ -14,6 +14,7 @@ use App\Http\Controllers\Tenant\StockController;
 use App\Http\Controllers\Tenant\StripeController;
 use App\Http\Controllers\Tenant\TenantProfileController;
 use App\Http\Controllers\Tenant\WarehouseController;
+use App\Http\Controllers\Tenant\OdooFlowController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -81,6 +82,19 @@ Route::middleware(['auth', 'verified', 'set_warehouse'])
         Route::patch('warehouses/{warehouse}/set-default', [WarehouseController::class, 'setDefault'])->name('warehouses.set-default');
 
         // Productos
+        Route::post('products/odoo/simular', [ProductController::class, 'simularCreacionOdoo'])
+            ->name('products.odoo.simular');
+
+        // Rutas para la demostración del WMS con Odoo
+        Route::get('operations/odoo-flow', [OdooFlowController::class, 'index'])->name('operations.odoo.flow');
+        Route::post('operations/odoo-flow', [OdooFlowController::class, 'process'])->name('operations.odoo.process');
+        Route::get('operations/odoo-pending', [OdooFlowController::class, 'pending'])->name('operations.odoo.pending');
+        Route::post('operations/odoo-validate', [OdooFlowController::class, 'validatePicking'])->name('operations.odoo.validate');
+        
+
+        Route::get('products/odoo', [ProductController::class, 'odooIndex'])
+            ->name('products.odoo'); 
+
         Route::resource('products', ProductController::class);
 
         // Categorías (CRUD completo)
